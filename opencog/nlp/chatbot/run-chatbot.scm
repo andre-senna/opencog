@@ -22,3 +22,4 @@
 (load-r2l-rulebase)
 
 (start-cogserver "../lib/opencog-chatbot.conf")
+,q
