@@ -34,6 +34,11 @@
 #include "SuRealCache.h"
 
 
+#include <iostream>
+#include <chrono>
+using namespace std;
+using namespace std::chrono;
+
 using namespace opencog::nlp;
 using namespace opencog;
 
@@ -126,7 +131,12 @@ HandleSeqSeq SuRealSCM::reset_cache(Handle dummy)
  */
 HandleSeqSeq SuRealSCM::do_cached_sureal_match(Handle h)
 {
-    return do_sureal_match(h, true);
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    HandleSeqSeq answer = do_sureal_match(h, true);
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    int duration = duration_cast<microseconds>(t2 - t1).count();
+    logger().info("Cached SuReal: %d", duration);
+    return answer;
 }
 
 /**
@@ -135,7 +145,12 @@ HandleSeqSeq SuRealSCM::do_cached_sureal_match(Handle h)
  */
 HandleSeqSeq SuRealSCM::do_non_cached_sureal_match(Handle h)
 {
-    return do_sureal_match(h, false);
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    HandleSeqSeq answer = do_sureal_match(h, false);
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    int duration = duration_cast<microseconds>(t2 - t1).count();
+    logger().info("Non-cached SuReal: %d", duration);
+    return answer;
 }
 
 /**

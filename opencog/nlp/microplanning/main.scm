@@ -1,5 +1,6 @@
 
 (use-modules (ice-9 receive))  ; for receive, below
+(use-modules (srfi srfi-19))
 
 ;
 ; loading additional dependency
@@ -526,7 +527,10 @@
     ; this (split sureal requests amongst multiple threads), just comment the 
     ; call to reset-sureal-cache above and change the line below to call 'sureal'
     ; instead of 'cached-sureal'
+    ;;(define t1 (current-time))
 	(define say-able (not (null? (cached-sureal temp-set-link))))
+    ;;(define t2 (current-time))
+    ;;(define duration (time-difference t2 t1))
 
 	; remove the temporary SetLink
 	(cog-extract temp-set-link)
