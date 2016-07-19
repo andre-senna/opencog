@@ -28,12 +28,22 @@
 #include <opencog/guile/SchemeSmob.h>
 #include <opencog/cogserver/server/CogServer.h>
 
+#include <opencog/nlp/scm2pgsql/SCMLoader.h>
+
+#include <iostream>
+#include <chrono>
+using namespace std;
+using namespace std::chrono;
+
 using namespace opencog;
 
 class MicroplanningUTest :  public CxxTest::TestSuite
 {
 private:
     SchemeEval* _evaluator;
+    high_resolution_clock::time_point t1;
+    high_resolution_clock::time_point t2;
+    int duration;
 
 public:
 
@@ -105,6 +115,7 @@ void MicroplanningUTest::setUp(void)
                  "tests/nlp/microplanning/test-results.scm");
 
     cogserver().loadSCMModules();
+    opencog::nlp::SCMLoader::load("../tests/nlp/microplanning/big.scm", cogserver().getAtomSpace());
 }
 
 void MicroplanningUTest::tearDown(void)
@@ -117,8 +128,13 @@ void MicroplanningUTest::test_declarative(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
-    std::string mdef = _evaluator->eval(
-        "(define m-result (microplanning test-declarative-sal \"declarative\" *default_chunks_option* #f))");
+
+    t1 = high_resolution_clock::now();
+    std::string mdef = _evaluator->eval("(define m-result (microplanning test-declarative-sal \"declarative\" *default_chunks_option* #f))");
+    t2 = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t2 - t1).count();
+    logger().info("Microplanner: %d", duration);
+
     printf("test_declarative default m-result=%s\n", mdef.c_str());
     bool eval_err = _evaluator->eval_error();
     _evaluator->clear_pending();
@@ -134,8 +150,12 @@ void MicroplanningUTest::test_declarative(void)
     TSM_ASSERT("Failed to generate the correct result without anaphora!",
         result == "#t\n");
 
-    std::string mres = _evaluator->eval(
-        "(define m-result (microplanning test-declarative-sal \"declarative\"))");
+    t1 = high_resolution_clock::now();
+    std::string mres = _evaluator->eval("(define m-result (microplanning test-declarative-sal \"declarative\"))");
+    t2 = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t2 - t1).count();
+    logger().info("Microplanner: %d", duration);
+
     printf("test_declarative m-result=%s\n", mres.c_str());
     eval_err = _evaluator->eval_error();
     _evaluator->clear_pending();
@@ -151,7 +171,12 @@ void MicroplanningUTest::test_interrogative(void)
 {
     logger().debug("BEGIN TEST: %s", __FUNCTION__);
 
+    t1 = high_resolution_clock::now();
     _evaluator->eval("(define m-result (microplanning test-interrogative-sal \"interrogative\" *default_chunks_option* #f))");
+    t2 = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t2 - t1).count();
+    logger().info("Microplanner: %d", duration);
+
     bool eval_err = _evaluator->eval_error();
     _evaluator->clear_pending();
     TSM_ASSERT("Failed to run microplanning on interrogative!", !eval_err);
@@ -159,7 +184,12 @@ void MicroplanningUTest::test_interrogative(void)
     std::string result = _evaluator->eval("(equal? m-result (interrogative-v1))");
     TSM_ASSERT("Failed to generate the correct result on interrogative!", result == "#t\n");
 
+    t1 = high_resolution_clock::now();
     _evaluator->eval("(define m-result (microplanning test-interrogative-sal \"interrogative\"))");
+    t2 = high_resolution_clock::now();
+    duration = duration_cast<microseconds>(t2 - t1).count();
+    logger().info("Microplanner: %d", duration);
+
     eval_err = _evaluator->eval_error();
     _evaluator->clear_pending();
     TSM_ASSERT("Failed to run microplanning with lexical noun alternative!", !eval_err);

@@ -13,6 +13,7 @@ LINK_DIRECTORIES(
 LINK_LIBRARIES(
 	${ATOMSPACE_LIBRARY}
 	server
+    scmloader
 )
 
 ADD_CXXTEST(MicroplanningUTest)
