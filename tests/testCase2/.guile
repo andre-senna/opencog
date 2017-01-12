@@ -1,0 +1,8 @@
+(add-to-load-path "/usr/local/share/opencog/scm")
+(add-to-load-path "/opencog/build/opencog/scm/opencog/")
+(add-to-load-path ".")
+
+(use-modules (ice-9 readline))
+(activate-readline)
+
+(use-modules (opencog))
