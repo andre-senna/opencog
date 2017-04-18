@@ -43,6 +43,7 @@
 #include <opencog/util/platform.h>
 
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/attentionbank/AttentionBank.h>
 
 #ifdef HAVE_CYTHON
 #include <opencog/cython/PythonEval.h>
@@ -147,6 +148,8 @@ CogServer::CogServer(AtomSpace* as) :
         atomSpace = new AtomSpace();
     else
         atomSpace = as;
+
+    attentionbank(atomSpace);
 
 #ifdef HAVE_GUILE
     // Tell scheme which atomspace to use.
@@ -651,7 +654,7 @@ void CogServer::openDatabase(void)
 #ifdef HAVE_PERSIST_SQL
     // No-op if the user has not configured a storage backend
     if (!config().has("STORAGE")) {
-        logger().warn("No database persistant storage configured! "
+        logger().info("No database persistant storage configured! "
                       "Use the STORAGE config keyword to define.");
         return;
     }

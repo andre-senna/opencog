@@ -24,7 +24,6 @@
 #include <unistd.h>
 
 #include <opencog/util/Config.h>
-#include <opencog/util/oc_assert.h>
 #include <opencog/cogserver/server/CogServer.h>
 
 using namespace opencog;
@@ -36,15 +35,20 @@ void gargleblast(int tid, int reps)
 		char buf[1000];
 		sprintf(buf, "echo '(Evaluation (Predicate \"visible face\") (List (Number %d)))\n' | nc -q 1 localhost 17333", i);
 		int rc = system(buf);
-		OC_ASSERT(rc==0, "system call failure");
+		if (rc != 0)
+			printf("Error: Create rep %d of %d in thread %d failed\n",
+				i, reps, tid);
+		TS_ASSERT_EQUALS(rc, 0);
 		usleep(50000);
 
 		if (20 <= i)
 		{
 			sprintf(buf, "echo '(cog-delete (Evaluation (Predicate \"visible face\") (List (Number %d))))\n' | nc -q 1 localhost 17333", i-20);
 			rc = system(buf);
-			OC_ASSERT(rc==0, "system call failure");
-
+			if (rc != 0)
+				printf("Error: Delete rep %d of %d in thread %d failed\n",
+					i, reps, tid);
+			TS_ASSERT_EQUALS(rc, 0);
 		}
 		usleep(50000);
 	}
@@ -54,6 +58,7 @@ class ShellUTest :  public CxxTest::TestSuite
 {
 private:
 	CogServer* csrv;
+	std::thread* main_loop;
 
 public:
 
@@ -73,20 +78,49 @@ public:
 	void setUp()
 	{
 		config().set("SERVER_PORT", "17333");
-	}
 
-	void tearDown()
-	{
-	}
-
-	void testMessaging()
-	{
 		csrv = new CogServer();
 		csrv->loadModules();
 		csrv->loadModule("libscheme-shell.so");
 		csrv->enableNetworkServer();
-		std::thread* main_loop = new std::thread(&CogServer::serverLoop, csrv);
+		main_loop = new std::thread(&CogServer::serverLoop, csrv);
+	}
 
+	void tearDown()
+	{
+		csrv->stop();
+		main_loop->join();
+		delete main_loop;
+		delete csrv;
+	}
+
+	void testControlD()
+	{
+		int rc = system("echo '(Concept \"42\")\n' | nc -q 1 localhost 17333");
+		if (rc != 0) printf("Error: first call failed\n");
+		TS_ASSERT_EQUALS(rc, 0);
+		usleep(50000);
+
+		// Well, I cannot figure out how to echo ctrl-D so use
+		// a dot, instead. Should do the same thing.
+		rc = system("echo 'scm\n(+ 2 2)\n.\n' | nc -q 1 localhost 17333");
+		if (rc != 0) printf("Error: second call failed\n");
+		TS_ASSERT_EQUALS(rc, 0);
+		usleep(50000);
+
+		rc = system("echo 'scm\n(Concept \"42\")\n' | nc -q 1 localhost 17333");
+		if (rc != 0) printf("Error: third call failed\n");
+		TS_ASSERT_EQUALS(rc, 0);
+		usleep(50000);
+
+		rc = system("echo '(+ 2 2)\n.\n' | nc -q 1 localhost 17333");
+		if (rc != 0) printf("Error: fourth call failed\n");
+		TS_ASSERT_EQUALS(rc, 0);
+		usleep(50000);
+	}
+
+	void testMessaging()
+	{
 #define NT 20
 		std::thread* pangalactic[NT];
 		int j;
@@ -100,9 +134,5 @@ public:
 			delete pangalactic[j];
 		}
 		sleep(5);
-		csrv->stop();
-		main_loop->join();
-		delete main_loop;
-		delete csrv;
 	}
 };

@@ -29,6 +29,7 @@
 #include <opencog/attention/atom_types.h>
 
 #include <opencog/atomspace/AtomSpace.h>
+#include <opencog/attentionbank/AttentionBank.h>
 
 #include "RentCollectionBaseAgent.h"
 
@@ -42,6 +43,8 @@ using namespace opencog;
 RentCollectionBaseAgent::RentCollectionBaseAgent(CogServer& cs) :
     Agent(cs)
 {
+    _bank = &attentionbank(_as);
+
     // init starting wages/rents. these should quickly change and reach
     // stable values, which adapt to the system dynamics
     STIAtomRent = config().get_int("ECAN_STARTING_ATOM_STI_RENT", 1);
@@ -70,7 +73,7 @@ void RentCollectionBaseAgent::run()
 
 int RentCollectionBaseAgent::calculate_STI_Rent()
 {
-    int funds = _as->get_STI_funds();
+    int funds = _bank->getSTIFunds();
     double diff  = targetSTI - funds;
     double ndiff = diff / stiFundsBuffer;
     ndiff = std::min(ndiff, 1.0);
@@ -88,7 +91,7 @@ int RentCollectionBaseAgent::calculate_STI_Rent()
 
 int RentCollectionBaseAgent::calculate_LTI_Rent()
 {
-    int funds = _as->get_LTI_funds();
+    int funds = _bank->getLTIFunds();
     double diff  = targetLTI - funds;
     double ndiff = diff / ltiFundsBuffer;
     ndiff = std::min(ndiff, 1.0);
