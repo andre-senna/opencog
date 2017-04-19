@@ -1,10 +1,7 @@
-(use-modules (opencog) (opencog atom-types))
+(use-modules (opencog) (opencog atom-types) (opencog nlp relex2logic))
 
 (load "states.scm")
 (load "utils.scm")
-
-; For var-decl etc
-(load "../relex2logic/rule-utils.scm")
 
 ;-------------------------------------------------------------------------------
 ; Useful functions for the contexts
@@ -499,6 +496,29 @@
             (word-pos "$ppl-inst" "noun")
             (Choice (Lemma (Variable "$ppl-inst") (Word "people"))
                     (Lemma (Variable "$ppl-inst") (Word "face")))
+        )
+    )
+)
+
+; Keyword: "done showing"
+(Define
+    (DefinedPredicate "is-asked-to-stop-demo?")
+    (Satisfaction
+        (VariableList
+            (var-decl "$sent" "SentenceNode")
+            (var-decl "$parse" "ParseNode")
+            (var-decl "$done" "WordInstanceNode")
+            (var-decl "$showing" "WordInstanceNode")
+        )
+        (And
+            (State input-utterance-sentence (Variable "$sent"))
+            (parse-of-sent "$parse" "$sent")
+            (word-in-parse "$done" "$parse")
+            (word-in-parse "$showing" "$parse")
+            (Reference (Variable "$done") (Word "done"))
+            (Reference (Variable "$showing") (Word "showing"))
+            (Evaluation (LinkGrammarRelationship "Pg")
+                (List (Variable "$done") (Variable "$showing")))
         )
     )
 )

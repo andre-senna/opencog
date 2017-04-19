@@ -32,6 +32,7 @@
 #include <opencog/attentionbank/AttentionBank.h>
 
 #include "AFRentCollectionAgent.h"
+#include "AttentionParamQuery.h"
 
 #include <thread>
 //#define DEBUG
@@ -43,7 +44,6 @@ using namespace opencog;
 
 AFRentCollectionAgent::AFRentCollectionAgent(CogServer& cs) : RentCollectionBaseAgent(cs)
 {
-    update_cycle     = 1 / config().get_double("ECAN_AF_RENT_FREQUENCY", 2); // per second.
     last_update      = high_resolution_clock::now();
 }
 
@@ -54,17 +54,12 @@ void AFRentCollectionAgent::selectTargets(HandleSeq &targetSetOut)
 {
     std::back_insert_iterator< std::vector<Handle> > out_hi(targetSetOut);
     attentionbank(_as).get_handle_set_in_attentional_focus(out_hi);
-    /* Without adding this sleep code right below the above method call,
-     * nlp-parse evaluation thread waits for minutes before it gets a chance to
-     * run.  XXX FIXME .. maybe sched_yield() would be a better choice?
-     */
-    // sched_yield();
-    std::this_thread::sleep_for(std::chrono::nanoseconds(1));
-    //std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void AFRentCollectionAgent::collectRent(HandleSeq& targetSet)
 {
+    update_cycle = std::stod(_atq.get_param_value(AttentionParamQuery::af_rent_update_freq));
+
     // calculate elapsed time Et
     seconds elapsed_time = duration_cast<seconds>
                            (high_resolution_clock::now() - last_update);

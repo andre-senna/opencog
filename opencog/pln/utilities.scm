@@ -102,7 +102,7 @@
     ; Do the filtering
     (define result (cog-execute! (MapLink filter-in-pattern filter-from)))
 
-    ; Cleanup garbage
+    ; Delete the filter-from SetLink and its encompasing MapLink.
     (cog-delete-recursive filter-from)
 
     result
@@ -117,7 +117,7 @@
 ; NOTE: It is simple b/c it doesn't try to restrict inference over a
 ; certain source atoms.
 ; TODO: Move logic to ForwardChainer.
-    (let* ((result (cog-fc (Set) RB-NODE (Set FOCUS-SET)))
+    (let* ((result (cog-fc RB-NODE (Set) (List) (Set FOCUS-SET)))
            (result-list (cog-outgoing-set result)))
         ; Cleanup
         (cog-delete result)
@@ -149,6 +149,7 @@
 
   Returns a list containing both the FOCUS-SET and the inference results.
 "
+    ; TODO: Add an optional argument for filtering results b/n steps using.
     ; Create the next focus-set.
     (define (create-next-fs prev-fs chaining-result)
             (delete-duplicates (append chaining-result prev-fs)))

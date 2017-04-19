@@ -199,7 +199,8 @@
     (define total-weight (accum-weight sorted-rules))
 
     ; Pick a number from 0.0 to total-weight.
-    (define cutoff (* total-weight (random:uniform)))
+    (define cutoff (* total-weight
+        (random:uniform (random-state-from-platform))))
 
     ; Recursively move through the list of rules, until the
     ; sum of the weights of the rules exceeds the cutoff.
@@ -258,10 +259,13 @@
             (default-per-demand-action-selector d)
 
             ; Else run the user's selector.
-            (let ((result (cog-execute! (car as))))
-                (if (equal? (cog-type result) 'SetLink)
+            ; Assume the results are wrapped in
+            ; a ListLink under a SetLink. Can be
+            ; expanded in the future if needed
+            (let ((result (gar (cog-execute! (car as)))))
+                (if (null? result)
+                    '()
                     (cog-outgoing-set result)
-                    (list result)
                 )
             )
         )
