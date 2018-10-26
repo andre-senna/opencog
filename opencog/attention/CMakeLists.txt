@@ -1,6 +1,6 @@
 # To make Boost ublas much more efficient.
 ADD_DEFINITIONS(-DNDEBUG)
-ADD_DEFINITIONS(-DLOG_AV_STAT)
+#ADD_DEFINITIONS(-DLOG_AV_STAT)
 
 # --------------------------------------------------
 OPENCOG_ADD_ATOM_TYPES(atom_types.script
@@ -22,7 +22,9 @@ ADD_LIBRARY(attention-types SHARED
 ADD_DEPENDENCIES(attention-types attention_atom_types)
 
 TARGET_LINK_LIBRARIES(attention-types
+	${ATOMSPACE_atomcore_LIBRARY}
 	${ATOMSPACE_atombase_LIBRARY}
+	${ATOMSPACE_atomproto_LIBRARY}
 )
 
 # --------------------------------------------------
@@ -30,6 +32,7 @@ TARGET_LINK_LIBRARIES(attention-types
 # AttentionModule
 ADD_LIBRARY(attention SHARED
 	AttentionParamQuery
+ 	AttentionUtils
 	AttentionModule
 	ImportanceDiffusionBase
 	AFImportanceDiffusionAgent
@@ -45,9 +48,7 @@ ADD_LIBRARY(attention SHARED
 	#scm/StimulationAgent
 )
 
-ADD_DEPENDENCIES(attention attention-types)
-
-TARGET_LINK_LIBRARIES(attention server ${ATOMSPACE_LIBRARIES})
+TARGET_LINK_LIBRARIES(attention attention-types server ${ATOMSPACE_LIBRARIES})
 
 
 INSTALL (TARGETS attention-types

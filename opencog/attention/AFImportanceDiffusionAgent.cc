@@ -35,19 +35,14 @@
 
 using namespace opencog;
 
-#ifdef DEBUG
-#undef DEBUG
-#endif
-
 AFImportanceDiffusionAgent::AFImportanceDiffusionAgent(CogServer& cs) :
     ImportanceDiffusionBase(cs)
 {
-   set_sleep_time(500);
 }
 
 void AFImportanceDiffusionAgent::run()
 {
-    // Read params
+    // Reread param values for dynamically updating the values.
     maxSpreadPercentage = std::stod(_atq.get_param_value(
                                     AttentionParamQuery::dif_spread_percentage));
     hebbianMaxAllocationPercentage =std::stod(_atq.get_param_value(
@@ -82,12 +77,5 @@ void AFImportanceDiffusionAgent::spreadImportance()
  */
 AttentionValue::sti_t AFImportanceDiffusionAgent::calculateDiffusionAmount(Handle h)
 {
-    updateMaxSpreadPercentage();
-
-    return (AttentionValue::sti_t) round(_bank->get_sti(h) * maxSpreadPercentage);
-
-    // TODO: Using integers for STI values can cause strange consequences.
-    // For example, if the amount to diffuse is 0.4, it will become 0, causing
-    // no diffusion to occur.
-    //   * See: https://github.com/opencog/opencog/issues/676
+    return (get_sti(h) * maxSpreadPercentage);
 }

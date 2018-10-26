@@ -30,6 +30,7 @@
 #include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/attentionbank/StochasticImportanceDiffusion.h>
 
+#include "AttentionUtils.h"
 #include "WAImportanceDiffusionAgent.h"
 
 using namespace opencog;
@@ -38,7 +39,6 @@ using namespace opencog;
 WAImportanceDiffusionAgent::WAImportanceDiffusionAgent(CogServer& cs) :
     ImportanceDiffusionBase(cs)
 {
-    set_sleep_time(300);
 }
 
 WAImportanceDiffusionAgent::~WAImportanceDiffusionAgent()
@@ -82,8 +82,8 @@ void WAImportanceDiffusionAgent::spreadImportance()
  */
 HandleSeq WAImportanceDiffusionAgent::diffusionSourceVector(void)
 {
-    Handle h = _bank->getRandomAtom();
-    
+    Handle h = _bank->getRandomAtomNotInAF();
+
     if(h == Handle::UNDEFINED){
         return HandleSeq{};
     }
@@ -100,8 +100,8 @@ HandleSeq WAImportanceDiffusionAgent::diffusionSourceVector(void)
 
 AttentionValue::sti_t WAImportanceDiffusionAgent::calculateDiffusionAmount(Handle h)
 {
-    static ecan::StochasticDiffusionAmountCalculator sdac(_as);
+    static ecan::StochasticDiffusionAmountCalculator sdac(&_bank->getImportance());
     float current_estimate = sdac.diffused_value(h, maxSpreadPercentage);
 
-    return _bank->get_sti(h) - current_estimate;
+    return get_sti(h) - current_estimate;
 }

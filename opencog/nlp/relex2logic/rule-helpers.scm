@@ -349,7 +349,7 @@
 					(Inheritance (Concept subj_instance) (Concept subj_concept))
 					(r2l-wordinst-concept subj_instance)
 					(EvaluationLink
-						(PredicateNode var_name)
+						(VariableNode var_name)
 						(ListLink (ConceptNode subj_instance)))
 				)
 		))
@@ -581,8 +581,8 @@
 	(r2l-wordinst-predicate verb_instance)
 	(cond ((string=? qtype "when")
 		(AtTimeLink
-			(VariableNode "$qVar")
 			(PredicateNode verb_instance)
+			(VariableNode "$qVar")
 		))
 	((string=? qtype "where")
 		(EvaluationLink
@@ -973,8 +973,8 @@
 			(ImplicationLink (PredicateNode verb_instance) (PredicateNode verb))
 			(r2l-wordinst-predicate verb_instance)
 			(AtTimeLink
-				(VariableNode var_name)
 				(PredicateNode verb_instance)
+				(VariableNode var_name)
 			)
 		)
 	)
@@ -991,8 +991,8 @@
 			(InheritanceLink (ConceptNode subj_instance) (ConceptNode subj_concept))
 			(r2l-wordinst-concept subj_instance)
 			(AtTimeLink
-				(VariableNode var_name)
 				(ConceptNode subj_instance)
+				(VariableNode var_name)
 			)
 		)
 	)
@@ -1642,7 +1642,7 @@
 ;            (TimeNode (number->string (+ (string->number $hour) 12)))
 ;        )
 ;    )
-;    (ListLink (AtTimeLink time-node (PredicateNode $v_instance)))
+;    (ListLink (AtTimeLink (PredicateNode $v_instance) time-node))
 ;)
 ;
 ;
@@ -1871,12 +1871,12 @@
 ;	(InheritanceLink (ConceptNode subj_instance) (ConceptNode subj_concept))
 ;	(InheritanceLink (ConceptNode obj_instance) (ConceptNode obj_concept))
 ;	(AtTimeLink
-;		(VariableNode "$qVar")
 ;		(EvaluationLink
 ;			(PredicateNode verb_instance)
 ;				(ListLink
 ;					(ConceptNode subj_instance)
-;					(ConceptNode obj_instance))))
+;					(ConceptNode obj_instance)))
+;		(VariableNode "$qVar"))
 ;))
 ;
 ; Example:
@@ -1888,13 +1888,13 @@
 ;	(InheritanceLink (ConceptNode obj_instance) (ConceptNode obj_concept))
 ;	(InheritanceLink (ConceptNode iobj_instance) (ConceptNode iobj_concept))
 ;	(AtTimeLink
-;		(VariableNode "$qVar")
 ;		(EvaluationLink
 ;			(PredicateNode verb_instance)
 ;				(ListLink
 ;					(ConceptNode subj_instance)
 ;					(ConceptNode obj_instance)
-;					(ConceptNode iobj_instance))))
+;					(ConceptNode iobj_instance)))
+;		(VariableNode "$qVar"))
 ;))
 ;--------------------------------------------------------
 ;

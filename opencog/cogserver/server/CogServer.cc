@@ -102,55 +102,38 @@ CogServer::~CogServer()
             // invoke the module's unload function
             (*mdata.unloadFunction)(mdata.module);
 
-            // erase the map entries (one with the filename as key, and one with the module)
-            // id as key
+            // erase the map entries (one with the filename as key, and
+            // one with the module id as key)
             modules.erase(filename);
             modules.erase(id);
         }
     }
 
-#ifdef HAVE_CYTHON
-    // Delete the singleton instance of the PythonEval.
-    PythonEval::delete_singleton_instance();
-
-    // Cleanup Python.
-    global_python_finalize();
-#endif /* HAVE_CYTHON */
-
-    // Clear the system activity table here because it relies on the
-    // atom table's existence.
-    _systemActivityTable.clearActivity();
-
-    // Delete the static atomSpace instance (defined in BaseServer.h)
-    if (atomSpace) {
-        delete atomSpace;
-        atomSpace = NULL;
-    }
+    // Shut down the system activity table.
+    _systemActivityTable.halt();
+    if (_private_as) delete _private_as;
 
     logger().debug("[CogServer] exit destructor");
 }
 
 CogServer::CogServer(AtomSpace* as) :
+    BaseServer(as),
     cycleCount(1), running(false), _networkServer(nullptr)
 {
-    // We shouldn't get called with a non-NULL atomSpace static global as
-    // that's indicative of a missing call to CogServer::~CogServer.
-    if (atomSpace) {
-        throw (RuntimeException(TRACE_INFO,
-               "Found non-NULL atomSpace. CogServer::~CogServer not called!"));
+    if (nullptr == as) {
+        _atomSpace = new AtomSpace();
+        _attentionBank = &attentionbank(_atomSpace);
+        _private_as = _atomSpace;
     }
-
-    if (nullptr == as)
-        atomSpace = new AtomSpace();
-    else
-        atomSpace = as;
-
-    attentionbank(atomSpace);
+    else {
+        _atomSpace = as;
+        _private_as = nullptr;
+    }
 
 #ifdef HAVE_GUILE
     // Tell scheme which atomspace to use.
     SchemeEval::init_scheme();
-    SchemeEval::set_scheme_as(atomSpace);
+    SchemeEval::set_scheme_as(_atomSpace);
 #endif // HAVE_GUILE
 #ifdef HAVE_CYTHON
     // Initialize Python.
@@ -158,10 +141,11 @@ CogServer::CogServer(AtomSpace* as) :
 
     // Tell the python evaluator to create its singleton instance
     // with our atomspace.
-    PythonEval::create_singleton_instance(atomSpace);
+    PythonEval::create_singleton_instance(_atomSpace);
 #endif // HAVE_CYTHON
 
     _systemActivityTable.init(this);
+    agentScheduler.set_activity_table(&_systemActivityTable);
 
     agentsRunning = true;
 }
@@ -174,8 +158,10 @@ void CogServer::enableNetworkServer(int port)
 
 void CogServer::disableNetworkServer()
 {
-    delete _networkServer;
-    _networkServer = nullptr;
+    if (_networkServer) {
+        delete _networkServer;
+        _networkServer = nullptr;
+    }
 }
 
 SystemActivityTable& CogServer::systemActivityTable()
@@ -207,6 +193,15 @@ void CogServer::serverLoop()
             usleep((unsigned int) delta);
         timer_start = timer_end;
     }
+
+    // Perform a clean shutdown. Drain the request queue.
+    while (0 < getRequestQueueSize())
+    {
+        processRequests();
+    }
+
+    // No way to process requests. Stop accepting network connections.
+    disableNetworkServer();
 }
 
 void CogServer::runLoopStep(void)
@@ -233,6 +228,7 @@ void CogServer::runLoopStep(void)
     // Process mind agents
     if (customLoopRun() and agentsRunning and 0 < agentScheduler.get_agents().size())
     {
+        gettimeofday(&timer_start, NULL);
         agentScheduler.process_agents();
 
         gettimeofday(&timer_end, NULL);
@@ -307,6 +303,7 @@ void CogServer::startAgent(AgentPtr agent, bool dedicated_thread,
         else {
             agentThreads.emplace_back(new AgentRunnerThread);
             runner = agentThreads.back().get();
+            runner->set_activity_table(&_systemActivityTable);
             if (!thread_name.empty())
             {
                 runner->set_name(thread_name);
@@ -334,9 +331,6 @@ void CogServer::stopAllAgents(const std::string& id)
     agentScheduler.remove_all_agents(id);
     for (auto &runner: agentThreads)
         runner->remove_all_agents(id);
-//    // remove statistical record of their activities
-//    for (size_t n = 0; n < to_delete.size(); n++)
-//        _systemActivityTable.clearActivity(to_delete[n]);
 }
 
 void CogServer::startAgentLoop(void)

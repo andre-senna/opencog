@@ -19,10 +19,6 @@
 (use-modules (opencog))
 (use-modules (opencog rule-engine))
 
-(load-from-path "utilities.scm")
-(load-from-path "av-tv.scm")
-(load-from-path "rule-engine-utils.scm")
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Define PLN rule-based system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -45,7 +41,7 @@
 (define config-dir (dirname (current-filename)))
 (define (prepend-config-dir fp) (string-append config-dir "/" fp))
 (define rule-files (list "rules/term/deduction.scm"
-                         "rules/wip/modus-ponens.scm"))
+                         "rules/propositional/modus-ponens.scm"))
 (for-each (lambda (fp) (load (prepend-config-dir fp))) rule-files)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,9 +49,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; List the rules and their weights.
-(define rules (list (list deduction-inheritance-rule-name 1)
-                    (list modus-ponens-implication-rule-name 1))
-)
+(define rules (list deduction-inheritance-rule-name
+                    modus-ponens-implication-rule-name))
 
 ; Associate rules to PLN
 (ure-add-rules pln-rbs rules)

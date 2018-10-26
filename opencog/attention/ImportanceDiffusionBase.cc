@@ -41,6 +41,7 @@
 
 #include "ImportanceDiffusionBase.h"
 #include "AttentionStat.h"
+#include "AttentionUtils.h"
 
 #define DEBUG
 #define _unused(x) ((void)x)
@@ -56,21 +57,17 @@ ImportanceDiffusionBase::ImportanceDiffusionBase(CogServer& cs) : Agent(cs)
 {
     _bank = &attentionbank(_as);
 
+    // Load diffusion parameters
+    maxSpreadPercentage = std::stod(_atq.get_param_value(
+                AttentionParamQuery::dif_spread_percentage));
+    hebbianMaxAllocationPercentage =std::stod(_atq.get_param_value(
+                AttentionParamQuery::heb_max_alloc_percentage));
+    spreadHebbianOnly = std::stoi(_atq.get_param_value(
+                AttentionParamQuery::dif_spread_hebonly));
+
     // Provide a logger
     setLogger(new opencog::Logger("ImportanceDiffusionBase.log",
                                   Logger::FINE, true));
-}
-
-/*
- * Allow the maximum diffusion percentage parameter to be varied dynamically by
- * modifying a configuration atom in the atomspace. This method checks for the
- * existence of the configuration atom, and if it exists, updates the parameter
- * to its current value. The value should be a probability between 0 and 1.
- */
-void ImportanceDiffusionBase::updateMaxSpreadPercentage()
-{
-    maxSpreadPercentage = std::stod(_atq.get_param_value(
-                AttentionParamQuery::dif_spread_percentage));
 }
 
 ImportanceDiffusionBase::~ImportanceDiffusionBase()
@@ -206,8 +203,8 @@ void ImportanceDiffusionBase::diffuseAtom(Handle source)
 void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
 {
     // Trade STI between the source and target atoms
-    _bank->set_sti(event.source, _bank->get_sti(event.source) - event.amount);
-    _bank->set_sti(event.target, _bank->get_sti(event.target) + event.amount);
+    _bank->set_sti(event.source, get_sti(event.source) - event.amount);
+    _bank->set_sti(event.target, get_sti(event.target) + event.amount);
 
 #ifdef DEBUG
     std::cout << "tradeSTI: " << event.amount << " from " << event.source
@@ -216,17 +213,6 @@ void ImportanceDiffusionBase::tradeSTI(DiffusionEventType event)
 
     // TODO: How to make this a transaction? This could go wrong if there
     // were simultaneous updates in other threads.
-
-    // TODO: Using integers for STI values can cause strange consequences.
-    // Rounding to an integer is required so that only whole STI amounts
-    // are exchanged; due to flooring after multiplying the probability
-    // vector by the total diffusion amount, the amount diffused by this
-    // routine may not exactly match the totalDiffusionAmount, which could
-    // be a problem. Floor is used instead of round, so that an atom cannot
-    // diffuse more STI than it has. This also can cause an atom to not
-    // diffuse any STI when the amount to be diffused is less than 1.
-    //   * See: https://github.com/opencog/opencog/issues/676
-
 }
 
 /*
@@ -266,14 +252,25 @@ HandleSeq ImportanceDiffusionBase::incidentAtoms(Handle h)
 {
     HandleSeq resultSet;
 
-    // Add the incoming set
-    h->getIncomingSet(back_inserter(resultSet));
+    // Add the incoming set only found in the present atomspace, because
+    // if on another thread the incoming-set is being modified, for example
+    // a query that uses transient atomspaces is being processed, we don't
+    // want to diffuse to transient atoms created.
+    // TODO: How to handle cases when the other atomspaces are not transient
+    // but are a child or parent of the present atomspace?
+    IncomingSet hIncomingSet = h->getIncomingSet(_as);
+    for (const auto& i : hIncomingSet)
+    {
+        resultSet.push_back(i->get_handle());
+    }
 
     // Calculate and append the outgoing set
-    if (h->isLink()) {
+    if (h->is_link()) {
         HandleSeq outgoing = h->getOutgoingSet();
         resultSet.insert(resultSet.end(), outgoing.begin(), outgoing.end());
     }
+
+    removeHebbianLinks(resultSet);
 
     return resultSet;
 }
@@ -292,27 +289,6 @@ HandleSeq ImportanceDiffusionBase::hebbianAdjacentAtoms(Handle h)
             get_target_neighbors(h, ASYMMETRIC_HEBBIAN_LINK);
 
     return resultSet;
-}
-
-void ImportanceDiffusionBase::removeHebbianLinks(HandleSeq& sources)
-{
-    auto it_end =
-        std::remove_if(sources.begin(), sources.end(),
-                [=](const Handle& h)
-                {
-                Type type = h->getType();
-
-                if (type == ASYMMETRIC_HEBBIAN_LINK ||
-                    type == HEBBIAN_LINK ||
-                    type == SYMMETRIC_HEBBIAN_LINK ||
-                    type == INVERSE_HEBBIAN_LINK ||
-                    type == SYMMETRIC_INVERSE_HEBBIAN_LINK)
-                         return true;
-                else
-                         return false;
-                });
-
-    sources.erase(it_end, sources.end());
 }
 
 /*
@@ -489,8 +465,8 @@ ImportanceDiffusionBase::combineIncidentAdjacentVectors(
 double ImportanceDiffusionBase::calculateHebbianDiffusionPercentage(
         Handle h)
 {
-    strength_t strength = h->getTruthValue()->getMean();
-    confidence_t confidence = h->getTruthValue()->getConfidence();
+    strength_t strength = h->getTruthValue()->get_mean();
+    confidence_t confidence = h->getTruthValue()->get_confidence();
 
     return strength * confidence;
 }

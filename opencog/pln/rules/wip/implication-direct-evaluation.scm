@@ -88,8 +88,8 @@
 (define (true-enough? A)
   (let* (
          (TV (cog-tv A))
-         (s (tv-mean TV))
-         (c (tv-conf TV)))
+         (s (cog-tv-mean TV))
+         (c (cog-tv-confidence TV)))
     (and (> s 0.5) (> c 0))))
 
 (define (implication-direct-evaluation-formula P Q)
@@ -103,7 +103,7 @@
          (fetch-true-enough-terms
           (lambda (p)
             (let* ((query (Get vardecl (term->instance p X)))
-                   (terms (cog-outgoing-set (cog-satisfying-set query))))
+                   (terms (cog-outgoing-set (cog-execute! query))))
               (filter (lambda (x) (true-enough-term? p x)) terms))))
          (P-true-enough-terms (fetch-true-enough-terms P))
          (Q-true-enough-terms (fetch-true-enough-terms Q))

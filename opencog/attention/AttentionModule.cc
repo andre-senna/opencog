@@ -25,12 +25,13 @@
 #include "AttentionModule.h"
 #include "AttentionParamQuery.h"
 
+#include <opencog/attentionbank/AttentionBank.h>
 #include <opencog/cogserver/server/CogServer.h>
 #include <opencog/util/Config.h>
-
-#include "opencog/attention/atom_types.definitions"
+#include <opencog/attention/atom_types.h>
 
 using namespace opencog;
+using namespace std::placeholders;
 
 concurrent_queue<Handle> opencog::newAtomsInAV;
 
@@ -62,7 +63,7 @@ AttentionModule::~AttentionModule()
     do_list_ecan_param_unregister();
     do_set_ecan_param_unregister();
 
-    addAFConnection.disconnect();
+    _cogserver.getAttentionBank().AddAFSignal().disconnect(addAFConnection);
 
     logger().debug("[AttentionModule] exit destructor");
 }
@@ -70,7 +71,11 @@ AttentionModule::~AttentionModule()
 void AttentionModule::init()
 {
     AttentionParamQuery _atq(&_cogserver.getAtomSpace());
-    _atq.load_default_values(); // Load default ECAN param values into AS
+
+    // Set params
+    int af_size = std::stoi(_atq.get_param_value(AttentionParamQuery::af_max_size));
+    attentionbank(&_cogserver.getAtomSpace()).set_af_size(af_size);
+    
     // New Thread based ECAN agents.
     _cogserver.registerAgent(AFImportanceDiffusionAgent::info().id, &afImportanceFactory);
     _cogserver.registerAgent(WAImportanceDiffusionAgent::info().id, &waImportanceFactory);
@@ -97,7 +102,7 @@ void AttentionModule::init()
 
 
     addAFConnection = _cogserver.getAttentionBank().AddAFSignal().connect(
-            boost::bind(&AttentionModule::addAFSignalHandler,
+            std::bind(&AttentionModule::addAFSignalHandler,
                 this, _1, _2, _3));
 }
 
@@ -146,7 +151,7 @@ std::string AttentionModule::do_list_ecan_param(Request *req, std::list<std::str
     AttentionParamQuery _atq(&_cogserver.getAtomSpace());
     HandleSeq hseq = _atq.get_params();
     for(const Handle& h : hseq){
-        std::string param = h->getName();
+        std::string param = h->get_name();
         response += param + "= " + _atq.get_param_value(param) + "\n"; 
     }
     return response;

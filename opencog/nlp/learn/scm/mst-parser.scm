@@ -16,7 +16,7 @@
 ;
 ; Input to this should be a single unicode utf8-encoded text sentence.
 ; It is presumed, as background, that the atomspace is loaded with a
-; large number of word-pairs and thier associated mutual information.
+; large number of word-pairs and their associated mutual information.
 ; These word-pairs need to have been previously computed.
 ;
 ; The sentence is tokenized, assuming that white-space represents word
@@ -65,7 +65,7 @@
 ; suffixes. This list is not complete nor terribly organized; rather,
 ; it is built up from experience of parsing assorted texts and noting
 ; the kinds of stuff that actually gets used. Its slanted towards
-; European langauges, and may be inadequate for other langauges.
+; European languages, and may be inadequate for other languages.
 ;
 ; I did not want to get too fancy here; I want just enough to parse
 ; most "ordinary" text, for now.  A fancier treatment must await
@@ -211,8 +211,15 @@
 
 	(define scorer (make-score-fn mi-source 'pair-fmi))
 
+	; Assign a bad cost to links that are too long --
+	; longer than 16. This is a sharp cutoff.
+	; This causes parser to run at O(N^3) for LEN < 16 and
+	; a faster rate, O(N^2.3) for 16<LEN. This should help.
+	(define (trunc-scorer LW RW LEN)
+		(if (< 16 LEN) -2e25 (scorer LW RW LEN)))
+
 	; Process the list of words.
-	(mst-parse-atom-seq word-list scorer)
+	(mst-parse-atom-seq word-list trunc-scorer)
 )
 
 ; ---------------------------------------------------------------------
@@ -241,6 +248,7 @@
 		(make-sections (mst-parse-text plain-text))
 	)
 )
+
 ; ---------------------------------------------------------------------
 ; ---------------------------------------------------------------------
 ;

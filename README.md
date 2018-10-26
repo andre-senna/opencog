@@ -96,9 +96,9 @@ installer at `/scripts/octool`.  Users of any version of Linux may
 use the Dockerfile to quickly build a container in which OpenCog will
 be built and run.
 
-###### cogutils
+###### cogutil
 > Common OpenCog C++ utilities
-> http://github.com/opencog/cogutils
+> http://github.com/opencog/cogutil
 > It uses exactly the same build procedure as this package. Be sure
   to `sudo make install` at the end.
 
@@ -107,6 +107,11 @@ be built and run.
 > http://github.com/opencog/atomspace
 > It uses exactly the same build procedure as this package. Be sure
   to `sudo make install` at the end.
+
+###### libuuid
+> Library for generating UUID's
+> Used by various internal subsystems.
+> `sudo apt-get install uuid-dev`
 
 Optional Prerequisites
 ----------------------
@@ -125,39 +130,27 @@ the build, will be more precise as to which parts will not be built.
 > It uses exactly the same build proceedure as this package. Be sure
   to `sudo make install` at the end.
 
-###### OpenGL
-> Open Graphics Library
-> Used by opencog/spatial/MapTool (which is now deprecated/obsolete !?)
-> http://www.opengl.org
-> Commonly provided with your video card driver
+###### OctoMap
+> 3D occupancy grid mapping library
+> Required for the robot perception subsystem.
+> `sudo apt-get install liboctomap-dev`
 
-###### SDL
-> Simple DirectMedia Layer
-> Used by opencog/spatial/MapTool (which is now deprecated/obsolete !?)
-> http://www.libsdl.org | libsdl1.2-dev
-
-###### SDL_gfx
-> Simple DirectMedia Layer extension
-> Used by opencog/spatial/MapTool (which is now deprecated/obsolete !?)
-> http://www.ferzkopp.net/joomla/content/view/19/14/ | libsdl-gfx1.2-dev
+Obsolete Prerequisites
+----------------------
+The following packages are needed to build some of the old, obsolete
+packages.
 
 ###### CppREST
 > C++ HTTP RESTful interfaces
 > Used by the Pattern miner for distributed processing (this will be
   replaced by gearman in future releases).
-> wget https://github.com/Microsoft/cpprestsdk/archive/v2.9.0.tar.gz
+> `sudo apt-get install libcpprest-dev`
 
 ###### Threading Building Blocks
 > C++ template library for parallel programming
 > Used to implement the optional REST API. (TODO: the REST API should
   be refactored to not use TBB)
-> https://www.threadingbuildingblocks.org/download | libtbb-dev
-
-###### ZeroMQ (version 3.2.4 or higher)
-> Asynchronous messaging library
-> Used by the event publisher library ... which is currently broken,
-  anyway, and not used anywhere ...
-> http://zeromq.org/intro:get-the-software | libzmq3-dev
+> `sudo apt-get install libtbb-dev`
 
 Building OpenCog
 ----------------

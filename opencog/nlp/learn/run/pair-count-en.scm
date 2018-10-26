@@ -2,7 +2,7 @@
 ; pair-count-en.scm
 ;
 ; Set up everything needed for the language-learning word-pair
-; counting pipeline. Starts the REPL server, opens the database.
+; counting pipeline. Starts the CogServer, opens the database.
 ;
 (use-modules (system repl common))
 (use-modules (system repl server))
@@ -12,10 +12,6 @@
 (use-modules (opencog cogserver))
 
 (repl-default-option-set! 'prompt "scheme@(en-pairs)> ")
-
-; Tell opencog where the relex server is located.
-; The port should match that in `relex-server-any.sh`
-(use-relex-server "127.0.0.1" 4445)
 
 ;;; Start the network REPL server on port 17005
 ;;; Unfortunately, this runs about 3x slower than the cogserver,
@@ -30,7 +26,7 @@
 ;;;)
 
 ; Start the cogserver on port 17005
-(start-cogserver "opencog-en.conf")
+(start-cogserver "config/opencog-pairs-en.conf")
 
 ; Open the database.
 ; Edit the below, setting the database name, user and password.

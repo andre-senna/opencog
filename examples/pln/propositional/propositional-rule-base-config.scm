@@ -32,9 +32,9 @@
 (define pln-rules-dir "../../../opencog/pln/rules/")
 (define (append-rule-dir basename) (string-append pln-rules-dir basename))
 (define rule-basenames
-  (list "fuzzy-conjunction-introduction.scm"
-        "fuzzy-disjunction-introduction.scm"
-        "negation-introduction.scm"
+  (list "propositional/fuzzy-conjunction-introduction.scm"
+        "propositional/fuzzy-disjunction-introduction.scm"
+        "wip/negation-introduction.scm"
         )
   )
 (define rule-files (map append-rule-dir rule-basenames))
@@ -44,20 +44,20 @@
 ;; Associate rules to the conjunction rule base ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; List the rules and their weights.
+;; List the rules
 (define rules
   (list
-        (list fuzzy-conjunction-introduction-1ary-rule-name 1)
-        (list fuzzy-conjunction-introduction-2ary-rule-name 1)
-        (list fuzzy-conjunction-introduction-3ary-rule-name 1)
-        (list fuzzy-conjunction-introduction-4ary-rule-name 1)
-        (list fuzzy-conjunction-introduction-5ary-rule-name 1)
-        (list fuzzy-disjunction-introduction-1ary-rule-name 1)
-        (list fuzzy-disjunction-introduction-2ary-rule-name 1)
-        (list fuzzy-disjunction-introduction-3ary-rule-name 1)
-        (list fuzzy-disjunction-introduction-4ary-rule-name 1)
-        (list fuzzy-disjunction-introduction-5ary-rule-name 1)
-        (list negation-introduction-rule-name 1)
+        fuzzy-conjunction-introduction-1ary-rule-name
+        fuzzy-conjunction-introduction-2ary-rule-name
+        fuzzy-conjunction-introduction-3ary-rule-name
+        fuzzy-conjunction-introduction-4ary-rule-name
+        fuzzy-conjunction-introduction-5ary-rule-name
+        fuzzy-disjunction-introduction-1ary-rule-name
+        fuzzy-disjunction-introduction-2ary-rule-name
+        fuzzy-disjunction-introduction-3ary-rule-name
+        fuzzy-disjunction-introduction-4ary-rule-name
+        fuzzy-disjunction-introduction-5ary-rule-name
+        negation-introduction-rule-name
         )
   )
 

@@ -33,6 +33,12 @@
 ;; Note that depending on <eval-type> the arguments should be
 ;; swapped. For instance MemberLink and EvaluationLink have swapped
 ;; arguments.
+;;
+;; Defined rules are:
+;;
+;; conditional-full-instantiation-implication-scope-meta-rule
+;; conditional-full-instantiation-implication-meta-rule
+;; conditional-full-instantiation-inheritance-meta-rule
 ;; -----------------------------------------------------------------------
 
 (use-modules (srfi srfi-1))
@@ -133,20 +139,20 @@
 
 ;; Given various TVs calculate the TV of Q(a)
 (define (conditional-full-instantiation-tv-formula Pinst-tv Impl-tv P-tv)
-  (let* ((Impl-s (tv-mean Impl-tv))
-         (Impl-c (tv-conf Impl-tv))
-         (P-s (tv-mean P-tv))
-         (P-c (tv-conf P-tv))
+  (let* ((Impl-s (cog-tv-mean Impl-tv))
+         (Impl-c (cog-tv-confidence Impl-tv))
+         (P-s (cog-tv-mean P-tv))
+         (P-c (cog-tv-confidence P-tv))
          ;; Hacks to overcome the lack of distributional TV. If s=1
          ;; and c=0, then assign s to the mode value satisfying the
          ;; deduction consistency constraint (what a pain, let's use
          ;; 0.25 for now).
          (P-s (if (and (< 0.99 P-s) (<= P-c 0)) 0.25 P-s))
-         (Pinst-s (tv-mean Pinst-tv))
-         (Pinst-c (tv-conf Pinst-tv))
+         (Pinst-s (cog-tv-mean Pinst-tv))
+         (Pinst-c (cog-tv-confidence Pinst-tv))
          (Qinst-s (* Impl-s Pinst-s))
          ;; (Qinst-c (* Impl-c Pinst-c (if (< 0 P-c ) (- 1 P-s) 1))))
-         (Qinst-c (* Impl-c Pinst-c (- 1 P-s))))
+         (Qinst-c (* Impl-c Pinst-c (if (< 0.99 Qinst-s) 1 (- 1 P-s)))))
     (stv Qinst-s Qinst-c)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -225,7 +231,7 @@
          (Impl-tv (cog-tv Impl))
          (P-tv (cog-tv P))
          (Qinst-tv (conditional-full-instantiation-tv-formula Pinst-tv Impl-tv P-tv)))
-    (if (< 0 (tv-conf Qinst-tv)) ; avoid creating informationless knowledge
+    (if (< 0 (cog-tv-confidence Qinst-tv)) ; avoid creating informationless knowledge
         (cog-merge-hi-conf-tv! Qinst Qinst-tv))))
 
 ;; Name the implication scope meta rule
@@ -296,19 +302,15 @@
          ;; content rather than variables.
          (produced-vardecl X)
          (produced-clause UA_X)
-         ;; Produced rule preconditions. A and A(X) must have a positive confidence
-         (produced-precondition-1 (Evaluation
-                                    (GroundedPredicate "scm: gt-zero-confidence")
-                                    UA))
-         (produced-precondition-2 (Evaluation
-                                    (GroundedPredicate "scm: gt-zero-confidence")
-                                    UA_X))
+         ;; Produced rule preconditions. A(X) must have a positive confidence
+         (produced-precondition (Evaluation
+                                  (GroundedPredicate "scm: gt-zero-confidence")
+                                  UA_X))
          ;; Produced rule pattern. Look for groundings of P that meet
          ;; the precondition.
          (produced-pattern (And
                              produced-clause
-                             produced-precondition-1
-                             produced-precondition-2))
+                             produced-precondition))
          ;; Produced rewrite rule last premise
          (UAUB (cog-new-link impl-type UA UB))
          ;; Produced rule rewrite. Apply formula to calculate the TV
@@ -344,7 +346,7 @@
          (Impl-tv (cog-tv Impl))
          (P-tv (cog-tv P))
          (Qinst-tv (conditional-full-instantiation-tv-formula Pinst-tv Impl-tv P-tv)))
-    (if (< 0 (tv-conf Qinst-tv)) ; avoid creating informationless knowledge
+    (if (< 0 (cog-tv-confidence Qinst-tv)) ; avoid creating informationless knowledge
         (cog-merge-hi-conf-tv! Qinst Qinst-tv))))
 
 ;; Generate and name

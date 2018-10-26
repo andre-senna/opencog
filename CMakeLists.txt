@@ -8,7 +8,6 @@
 # -- configure various config files.
 # -- print pretty summary
 #
-include(lib/Summary.cmake)
 
 # Seems to work fine with cmake-2.6
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
@@ -53,7 +52,22 @@ ADD_DEFINITIONS(-DPROJECT_SOURCE_DIR=\\"${CMAKE_SOURCE_DIR}\\"
                 -DPROJECT_BINARY_DIR=\\"${CMAKE_BINARY_DIR}\\")
 
 # add the 'lib' dir to cmake's module search path
-SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/lib/")
+
+# Cogutil
+FIND_PACKAGE(CogUtil 2.0.1 CONFIG REQUIRED)
+IF (COGUTIL_FOUND)
+    MESSAGE(STATUS "CogUtil found.")
+    ADD_DEFINITIONS(-DHAVE_COGUTIL)
+    SET(HAVE_COGUTIL 1)
+ELSE (COGUTIL_FOUND)
+    MESSAGE(FATAL_ERROR "CogUtil missing: it is needed for everything!")
+ENDIF (COGUTIL_FOUND)
+
+# add the 'cmake' directory from cogutil to search path
+list(APPEND CMAKE_MODULE_PATH  ${COGUTIL_DATA_DIR}/cmake)
+
+include(${COGUTIL_DATA_DIR}/cmake/Summary.cmake)
 
 # ===============================================================
 # Detect different compilers and OS'es, tweak flags as necessary.
@@ -87,8 +101,8 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 	#
 	# 2) -fopenmp for multithreading support
 	#
-	# 3) -std=gnu++0x for C++0x and GNU extensions support
-	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++0x")
+	# 3) -std=gnu++11 for C++11 and GNU extensions support
+	SET(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -Wno-variadic-macros -fopenmp -std=gnu++11")
 
 	SET(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 	SET(CMAKE_CXX_FLAGS_PROFILE ${CMAKE_C_FLAGS_PROFILE})
@@ -133,19 +147,8 @@ ENDIF (WIN32)
 # ===================================================================
 # Check for existance of various required, optional packages.
 
-# Check for cogutils first, then check for atomspace
-# Cogutils
-FIND_PACKAGE(CogUtil 2.0.1 REQUIRED)
-IF (COGUTIL_FOUND)
-	MESSAGE(STATUS "CogUtil found.")
-	ADD_DEFINITIONS(-DHAVE_COGUTIL)
-	SET(HAVE_COGUTIL 1)
-ELSE (COGUTIL_FOUND)
-	MESSAGE(FATAL_ERROR "CogUtil missing: it is needed for everything!")
-ENDIF (COGUTIL_FOUND)
-
 # AtomSpace
-FIND_PACKAGE(AtomSpace 5.0.3 REQUIRED)
+FIND_PACKAGE(AtomSpace 5.0.3 CONFIG REQUIRED)
 IF (ATOMSPACE_FOUND)
 	MESSAGE(STATUS "AtomSpace found.")
 	ADD_DEFINITIONS(-DHAVE_ATOMSPACE)
@@ -191,12 +194,6 @@ FIND_PACKAGE(Boost 1.46 COMPONENTS math_c99 QUIET)
 IF(Boost_FOUND_SAVE)
 	SET(Boost_FOUND 1)
 ENDIF(Boost_FOUND_SAVE)
-
-IF(Boost_PROGRAM_OPTIONS_FOUND)
-	MESSAGE(STATUS "Found Boost::program_options")
-ELSE(Boost_PROGRAM_OPTIONS_FOUND)
-	MESSAGE(STATUS "Boost program_options missing: needed for Spatial tools (MapTools).")
-ENDIF(Boost_PROGRAM_OPTIONS_FOUND)
 
 IF(Boost_MATH_C99_FOUND)
 	MESSAGE(STATUS "Found Boost::math")
@@ -245,8 +242,8 @@ ELSE (GTK3_FOUND)
 ENDIF (GTK3_FOUND)
 
 # Gnu Guile scheme interpreter
-# Version 2.0.0 is needed for mrs io ports, compilation, etc.
-FIND_PACKAGE(Guile 2.0.0)
+# Version 2.2.2 is needed for mrs io ports, compilation, atomics, nlp
+FIND_PACKAGE(Guile 2.2.2)
 IF (GUILE_FOUND AND GMP_LIBRARY AND GMP_INCLUDE_DIR)
 	ADD_DEFINITIONS(-DHAVE_GUILE)
 	SET(HAVE_GUILE 1)
@@ -267,9 +264,9 @@ ELSE (LAPACK_FOUND)
 ENDIF (LAPACK_FOUND)
 
 
-# Link-Gramar is needed for the Viterbi parser and more generally NLP
-# Only 4.7.12 or newer has the required read-dict API in it.
-FIND_PACKAGE(LinkGrammar 4.7.12)
+# Link-Gramar is needed for several NLP subsystems
+# Only 5.4.0 or newer has the required API in it.
+FIND_PACKAGE(LinkGrammar 5.4.0)
 IF (LINK_GRAMMAR_FOUND)
 	SET(HAVE_LINK_GRAMMAR 1)
 	INCLUDE_DIRECTORIES(${LINK_GRAMMAR_INCLUDE_DIRS})
@@ -277,9 +274,18 @@ ELSE (LINK_GRAMMAR_FOUND)
 	MESSAGE(STATUS "Link Grammar missing: needed for NLP.")
 ENDIF (LINK_GRAMMAR_FOUND)
 
+FIND_PACKAGE(UUID)
+IF (UUID_FOUND)
+	SET(HAVE_UUID 1)
+	INCLUDE_DIRECTORIES(${UUID_INCLUDE_DIRS})
+	ADD_DEFINITIONS(${UUID_DEFINITIONS})
+ELSE (UUID_FOUND)
+	MESSAGE(STATUS "UUID library missing: needed for NLP.")
+ENDIF (UUID_FOUND)
+
 
 # MOSES needed for ???
-FIND_PACKAGE(MOSES)
+FIND_PACKAGE(MOSES CONFIG)
 
 IF (MOSES_FOUND)
 	MESSAGE(STATUS "MOSES was found.")
@@ -299,16 +305,6 @@ IF(OCTOMAP_FOUND AND OCTOMAP_LIBRARY)
 ELSE (OCTOMAP_FOUND AND OCTOMAP_LIBRARY)
   SET(OCTOMAP_DIR_MESSAGE "Octomap missing: needed for the SpaceTime map.")
 ENDIF(OCTOMAP_FOUND AND OCTOMAP_LIBRARY)
-
-
-# OpenGL needed for visualization...
-FIND_PACKAGE(OpenGL)
-
-IF (OPENGL_FOUND)
-	MESSAGE(STATUS "OpenGL was found.")
-ELSE (OPENGL_FOUND)
-	MESSAGE(STATUS "OpenGL missing: needed for space visualization tools (MapExplorer, MapTools, etc.).")
-ENDIF (OPENGL_FOUND)
 
 # Google Protobuf library
 # The protocol buffer compiler is a separately installable package, and
@@ -346,20 +342,30 @@ MESSAGE(STATUS "${PROTOBUF_DIR_MESSAGE}")
 # -----------------------------------------------------------------------------
 # Python and Cython
 #
-# NOTE: Python interpreter is needed for runing python unit tests, and for
-# running the FindCython and FindCxxtest cmake modules.
+# NOTE: Python interpreter is needed for runing python unit tests,
+# and for running the FindCython module.
 
-FIND_PACKAGE(PythonInterp 2.7)
-IF (2.7.0 VERSION_LESS ${PYTHON_VERSION_STRING} AND
-	3.0.0 VERSION_GREATER ${PYTHON_VERSION_STRING})
+FIND_PACKAGE(Python3Interp)
+IF (3.4.0 VERSION_LESS ${PYTHON3_VERSION_STRING})
 	SET (HAVE_PY_INTERP 1)
-	MESSAGE(STATUS "Python ${PYTHON_VERSION_STRING} interpreter found.")
+	SET (PYTHON_VER python3.5)
+	MESSAGE(STATUS "Python ${PYTHON3_VERSION_STRING} interpreter found.")
 ENDIF()
 
-FIND_PACKAGE(PythonLibs 2.7)
+IF (NOT HAVE_PY_INTERP)
+	FIND_PACKAGE(PythonInterp)
+	IF (2.7.0 VERSION_LESS ${PYTHON_VERSION_STRING})
+		SET (HAVE_PY_INTERP 1)
+		SET (PYTHON_VER python2.7)
+		MESSAGE(STATUS "Python ${PYTHON_VERSION_STRING} interpreter found.")
+	ENDIF()
+ENDIF()
+
+FIND_PACKAGE(PythonLibs)
 IF (PYTHONLIBS_FOUND AND
-	2.7.0 VERSION_LESS ${PYTHONLIBS_VERSION_STRING} AND
-	3.0.0 VERSION_GREATER ${PYTHONLIBS_VERSION_STRING})
+     ((PYTHON3INTERP_FOUND AND 3.4.0 VERSION_LESS ${PYTHONLIBS_VERSION_STRING})
+     OR
+     (2.7.0 VERSION_LESS ${PYTHONLIBS_VERSION_STRING})))
 	SET (HAVE_PY_LIBS 1)
 	MESSAGE(STATUS "Python ${PYTHONLIBS_VERSION_STRING} libraries found.")
 ELSE()
@@ -367,26 +373,21 @@ ELSE()
 ENDIF()
 
 # Cython is used to generate python bindings.
-IF(HAVE_PY_INTERP)
-	FIND_PACKAGE(Cython 0.19.0)
+IF (HAVE_PY_INTERP)
+	FIND_PACKAGE(Cython 0.23.0)
 
 	IF (CYTHON_FOUND AND HAVE_PY_LIBS)
 		# Find python destination dir for python bindings because it may
 		# differ on each operating system.
 		ADD_DEFINITIONS(-DHAVE_CYTHON)
 		SET(HAVE_CYTHON 1)
-		EXECUTE_PROCESS(
-			COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import *;print(get_python_lib())"
-			OUTPUT_VARIABLE PYTHON_DEST
-		)
 
-		# Replace new line at end.
-		STRING(REPLACE "\n" "" PYTHON_DEST "${PYTHON_DEST}")
-		IF ("${PYTHON_DEST}" STREQUAL "")
-			MESSAGE(FATAL_ERROR "Python destination dir not found")
-		ELSE ("${PYTHON_DEST}" STREQUAL "")
-			MESSAGE(STATUS "Python destination dir found: ${PYTHON_DEST}" )
-		ENDIF ("${PYTHON_DEST}" STREQUAL "")
+		# Hack together some reasonable install location.
+		SET(PYTHON_DEST
+			"lib${LIB_DIR_SUFFIX}/${PYTHON_VER}/dist-packages/opencog")
+		MESSAGE(STATUS
+			"Python install dir: ${CMAKE_INSTALL_PREFIX}/${PYTHON_DEST}" )
+
 	ELSE (CYTHON_FOUND AND HAVE_PY_LIBS)
 		IF(NOT CYTHON_FOUND)
 			MESSAGE(STATUS "Cython executable not found.")
@@ -394,30 +395,18 @@ IF(HAVE_PY_INTERP)
 	ENDIF (CYTHON_FOUND AND HAVE_PY_LIBS)
 
 	# Nosetests will find and automatically run python tests.
-	FIND_PROGRAM(NOSETESTS_EXECUTABLE nosetests)
+	IF (PYTHON3INTERP_FOUND)
+		FIND_PROGRAM(NOSETESTS_EXECUTABLE nosetests3)
+	ELSE ()
+		FIND_PROGRAM(NOSETESTS_EXECUTABLE nosetests)
+	ENDIF ()
 	IF (NOSETESTS_EXECUTABLE AND CYTHON_FOUND AND HAVE_PY_LIBS)
 		SET(HAVE_NOSETESTS 1)
+		MESSAGE(STATUS "Using nosetests executable " ${NOSETESTS_EXECUTABLE})
 	ENDIF (NOSETESTS_EXECUTABLE AND CYTHON_FOUND AND HAVE_PY_LIBS)
-ENDIF(HAVE_PY_INTERP)
+ENDIF (HAVE_PY_INTERP)
 
 # -----------------------------------------------------------------------------
-
-# SDL needed for the spatial tools
-FIND_PACKAGE(SDL)
-
-IF (SDL_FOUND)
-	MESSAGE(STATUS "SDL was found.")
-ELSE (SDL_FOUND)
-	MESSAGE(STATUS "SDL missing: needed for Spatial tools (MapExplorer, MapTools, etc.).")
-ENDIF (SDL_FOUND)
-
-FIND_PACKAGE(SDL_gfx)
-
-IF (SDLGFX_FOUND)
-	MESSAGE(STATUS "SDL_gfx was found")
-ELSE (SDLGFX_FOUND)
-	MESSAGE(STATUS "SDL_gfx missing: needed for Spatial tools (MapExplorer, MapTools, etc.).")
-ENDIF (SDLGFX_FOUND)
 
 # Threaded Building Blocks (Intel TBB) library
 FIND_PACKAGE(TBB)
@@ -453,6 +442,20 @@ ELSE (ZMQ_FOUND AND ZMQ_LIBRARY)
 ENDIF (ZMQ_FOUND AND ZMQ_LIBRARY)
 MESSAGE(STATUS "${ZMQ_DIR_MESSAGE}")
 
+#jsoncpp
+FIND_PACKAGE(PkgConfig)
+IF(PKG_CONFIG_FOUND)
+  pkg_check_modules(JSONCPP jsoncpp)
+  IF(JSONCPP_FOUND)
+    ADD_DEFINITIONS(-DHAVE_JSONCPP)
+    SET(HAVE_JSONCPP 1)
+    SET(JSONCPP_DIR_MESSAGE "JsonCPP was found")
+  ELSE(JSONCPP_FOUND)
+    SET(JSONCPP_DIR_MESSAGE "JsonCPP was not found; the AtomSpace Publisher Module needs JsonCPP to publish events in JSON.\nIf you need to receive AtomSpace events in JSON, install JsonCPP using your package manager \nsuch as apt or build from source: https://github.com/open-source-parsers/jsoncpp/wiki/Building")
+  ENDIF(JSONCPP_FOUND)
+ENDIF(PKG_CONFIG_FOUND)
+MESSAGE(STATUS "${JSONCPP_DIR_MESSAGE}")
+
 # Glasgow Haskell compiler
 FIND_PACKAGE(Stack)
 IF (STACK_FOUND)
@@ -476,21 +479,17 @@ IF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
 	SET(HAVE_STATISTICS 1)
 ENDIF(HAVE_ATOMSPACE AND HAVE_COGUTIL)
 
-IF(Boost_PROGRAM_OPTIONS_FOUND AND OPENGL_FOUND AND SDL_FOUND AND SDLGFX_FOUND)
-	SET(HAVE_SPATIAL_TOOLS 1)
-ENDIF(Boost_PROGRAM_OPTIONS_FOUND AND OPENGL_FOUND AND SDL_FOUND AND SDLGFX_FOUND)
-
 IF(HAVE_ATOMSPACE)
 	SET(HAVE_SERVER 1)
 ENDIF(HAVE_ATOMSPACE)
 
-IF(HAVE_ATOMSPACE AND HAVE_GUILE AND HAVE_LINK_GRAMMAR)
+IF(HAVE_ATOMSPACE AND HAVE_GUILE AND HAVE_LINK_GRAMMAR AND HAVE_UUID)
 	SET(HAVE_NLP 1)
-ENDIF(HAVE_ATOMSPACE AND HAVE_GUILE AND HAVE_LINK_GRAMMAR)
+ENDIF(HAVE_ATOMSPACE AND HAVE_GUILE AND HAVE_LINK_GRAMMAR AND HAVE_UUID)
 
-IF(HAVE_SERVER AND HAVE_TBB AND HAVE_ZMQ)
-	SET(HAVE_EVENT_PUBLISHING_DEPENDENCIES 1)
-ENDIF(HAVE_SERVER AND HAVE_TBB AND HAVE_ZMQ)
+IF(HAVE_SERVER AND HAVE_TBB AND HAVE_ZMQ AND HAVE_JSONCPP)
+  SET(HAVE_EVENT_PUBLISHING_DEPENDENCIES 1)
+ENDIF(HAVE_SERVER AND HAVE_TBB AND HAVE_ZMQ AND HAVE_JSONCPP)
 
 # ===================================================================
 # global includes
@@ -509,8 +508,8 @@ ADD_DEFINITIONS(-DDATADIR=\\"${DATADIR}\\")
 SET (MAN_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/share/man")
 
 # include custom opencog cmake macros
-INCLUDE("${CMAKE_SOURCE_DIR}/lib/OpenCogMacros.cmake")
-INCLUDE("${CMAKE_SOURCE_DIR}/lib/OpenCogFunctions.cmake")
+INCLUDE("${COGUTIL_DATA_DIR}/cmake/OpenCogMacros.cmake")
+INCLUDE("${COGUTIL_DATA_DIR}/cmake/OpenCogFunctions.cmake")
 
 # small hack to handle unixes that use "/usr/lib64" instead of "/usr/lib" as the
 # default lib path on 64 bit archs
@@ -554,7 +553,8 @@ IF (CXXTEST_FOUND)
 			# and cmake has no way to add non-test dependencies to tests
 			DEPENDS tests cogserver
 			WORKING_DIRECTORY tests
-			COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process $(ARGS)
+			COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure $(ARGS)
+
 			# This script combines the coverage analysis of each test,
 			# then creates html in tests/lcov
 			# Note: this should now be run separately...
@@ -566,7 +566,7 @@ IF (CXXTEST_FOUND)
 		ADD_CUSTOM_TARGET(test
 			DEPENDS tests
 			WORKING_DIRECTORY tests
-			COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process $(ARGS)
+			COMMAND ${CMAKE_CTEST_COMMAND} --force-new-ctest-process --output-on-failure $(ARGS)
 			COMMENT "Running tests..."
 		)
 	ENDIF (CMAKE_BUILD_TYPE STREQUAL "Coverage")
@@ -734,7 +734,6 @@ SUMMARY_ADD("REST Events" "REST Atomspace Event Publisher module"
 	HAVE_EVENT_PUBLISHING_DEPENDENCIES)
 SUMMARY_ADD("Server" "The CogServer" HAVE_SERVER)
 SUMMARY_ADD("SpaceTime" "3D Space-Time object tracker" HAVE_OCTOMAP)
-SUMMARY_ADD("Spatial" "Vizualisation of the 3D spacemap" HAVE_SPATIAL_TOOLS AND HAVE_OCTOMAP)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
 SUMMARY_ADD("NLP" "Natural Language Processing" HAVE_NLP)
 SUMMARY_ADD("PatternMiner" "Pattern Miner" HAVE_ATOMSPACE)

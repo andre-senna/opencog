@@ -1,9 +1,12 @@
+LINK_LIBRARIES (
+	server
+	attention-types
+	attention
+	${GSL_LIBRARIES}
+	${ATOMSPACE_LIBRARIES}
+	${Boost_SYSTEM_LIBRARY}
+)
+
 ADD_CXXTEST(AttentionParamQueryUTest)
-          
-TARGET_LINK_LIBRARIES(AttentionParamQueryUTest
-    attention
-    ${ATOMSPACE_LIBRARIES}
-    ${ATOMSPACE_query_LIBRARY}
-    ${ATOMSPACE_atombase_LIBRARY}
-    ${COGUTIL_LIBRARY}
-    )
+ADD_CXXTEST(ImportanceDiffusionUTest)
+ADD_CXXTEST(HebbianCreationModuleUTest)

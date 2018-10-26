@@ -71,8 +71,8 @@ protected:
     std::thread *parsePatternTaskThreads;
     std::mutex patternQueueLock, addRelationLock, updatePatternCountLock, modifyWorkerLock;
 
-    // map < uid, <is_still_working, processedFactsNum> >
-    map<string, std::pair<bool, unsigned int> > allWorkers;
+    // map<uid, <is_still_working, processedFactsNum>>
+    map<string, std::pair<bool, unsigned int>> allWorkers;
     bool allWorkersStop;
 
     list<json::value> waitForParsePatternQueue;
@@ -116,18 +116,9 @@ protected:
     void addPatternsToJsonArrayBuf(string curPatternKeyStr, string parentKeyString,  unsigned int extendedLinkIndex, bool notOutPutPattern, json::value &patternJsonArray);
     void sendPatternsToCentralServer(json::value &patternJsonArray);
 
-
-
-
 public:
 
-    DistributedPatternMiner(AtomSpace* _originalAtomSpace) : PatternMiner(_originalAtomSpace)
-    {
-
-        is_distributed = true;
-        patternJsonArrays = new web::json::value[THREAD_NUM];
-
-    }
+    DistributedPatternMiner(AtomSpace& _original_as);
 
     void launchADistributedWorker();
     void launchCentralServer();
@@ -137,8 +128,6 @@ public:
     bool sendRequest(http_request &request, http_response &response);
 
     void startCentralServer();
-
-
 };
 
 }

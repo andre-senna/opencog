@@ -8,23 +8,22 @@
 ; Copyright (c) 2013, 2017 Linas Vepstas <linasvepstas@gmail.com>
 ;
 ; This code is part of the language-learning effort.  The project
-; requires that a lot of text be observed, withe the goal of deducing
+; requires that a lot of text be observed, with the goal of deducing
 ; a grammar from it, using entropy and other basic probability methods.
 ;
 ; Main entry point: `(observe-text plain-text)`
 ;
-; Call this entry point with exactly one sentance as a plain text
-; string. It will be parsed by RelEx, and the resulting link-grammar
-; link usage counts will be updated in the atomspace. The counts are
-; flushed to the SQL database so that they're not forgotten.
+; Call this entry point with exactly one sentence as a plain text
+; string. It will be parsed, and the resulting link-grammar link usage
+; counts will be updated in the atomspace. The counts are flushed to
+; the SQL database so that they're not forgotten.
 ;
-; RelEx is used for only one reason: it prints out the required
-; atomese format. The rule-engine in RelEx is NOT used!  This could
-; be redesigned and XXX FIXME, it should be.
-;
-; This tracks multiple, independent counts:
+; Several different kinds of counts are maintained, depending on the
+; mode. Usually, not all of these are maintained at the same time, as
+; this will result in excessively large atomspaces. Some of the counts
+; that can be maintained are:
 ; *) how many sentences have been observed.
-; *) how many parses were observed.
+; *) how many parses were observed (when using parse-driven counting).
 ; *) how many words have been observed (counting once-per-word-per-parse)
 ; *) how many word-order pairs have been observed.
 ; *) the distance between words in the above pairs.
@@ -38,14 +37,22 @@
 ; in a parse.  That is, if a word appears twice in a parse, it is counted
 ; twice.
 ;
-; Word-pairs show up, and are counted in four different ways. First,
-; a count is made if two words appear, left-right ordered, in the same
-; sentence. This count is stored in the CountTV for the EvaluationLink
-; on (PredicateNode "*-Sentence Word Pair-*").  A second count is
-; maintained for this same pair, but including the distance between the
-; two words. This is on (SchemaNode "*-Pair Distance-*").  Since
-; sentences always start with LEFT-WALL, this can be used to reconstruct
-; the typical word-order in a sentence.
+; Word-pairs show up, and can be counted in four different ways. One
+; method  is a windowed clique-counter. If two words appear within a
+; fixed distance from each other (the window size), the corresponding
+; word-pair count is incremented. This is a clique-count, because every
+; possible pairing is considered. This count is stored in the CountTV
+; for the EvaluationLink on (PredicateNode "*-Sentence Word Pair-*").
+; A second count is maintained for this same pair, but including the
+; distance between the two words. This is kept on a link identified by
+; (SchemaNode "*-Pair Distance-*"). Please note that the pair-distance
+; counter can lead to very large atomspaces, because for window widths
+; of N, a given word-pair might be observed with every possible
+; distance between them, i.e. up to N times.
+;
+; XXX FIXME we shold probably not stor this way. We should probably
+; have just one wod-pair, and hold teh counts in different values,
+; instead. This needs a code redesign. XXX
 ;
 ; Word-pairs are also designated by means of Link Grammar parses of a
 ; sentence. A Link Grammar parse creates a list of typed links between
@@ -53,22 +60,28 @@
 ; each time that it occurs.  These counts are maintained in the CountTV
 ; on the EvaluationLink for the LinkGrammarRelationshipNode for that
 ; word-pair.  In addition, a count is maintained of the length of that
-; link.
+; link. XXX where??? This is not implemented ??? XXX
 ;
-; For the initial stages of the langauge-learning project, the parses
-; are produced by the "any" langauge parser, which produces random planar
+; For the initial stages of the language-learning project, the parses
+; are produced by the "any" language parser, which produces random planar
 ; trees.  This creates a sampling of word-pairs that is different than
 ; merely having them show up in the same sentence.  That is, a covering
 ; of a sentence by random trees does not produce the same edge statistics
 ; as a clique of edges drawn between all words. This is explored further
 ; in the diary, in a section devoted to this topic.
 ;
+; These different counting modes can be turned on and off with the
+; "mode" flag.
+;
 ; The Link Grammar parse also produces and reports the disjuncts that were
 ; used for each word. These are useful in and of themselves; they indicate
 ; the hubbiness (link-multiplicity) of each word. The disjunct counts are
-; maintained on the LgWordCset for a given word.
+; maintained on the LgWordCset for a given word. XXX This is currently
+; disabled in the code, and are not handled by the mode flag. This needs
+; to be (optionally) turned back on. XXX
 ;
 (use-modules (opencog) (opencog nlp) (opencog persist))
+(use-modules (opencog exec) (opencog nlp lg-parse))
 (use-modules (srfi srfi-1))
 
 ; ---------------------------------------------------------------------
@@ -88,9 +101,6 @@
 ;         (NumberNode "4"))
 ;
 ; when the sentence was "this is some foo".
-;
-; Due to a RelEx bug in parenthesis handling, the `word-inst-get-word`
-; function used here can throw an exception. See documentation.
 ;
 (define (make-word-sequence PARSE)
 
@@ -151,7 +161,7 @@
 )
 
 ; ---------------------------------------------------------------------
-; update-clique-pair-counts -- count occurances of random word-pairs.
+; update-clique-pair-counts -- count occurrences of random word-pairs.
 ;
 ; This generates what are termed "clique pairs" throughout: these are
 ; all possible word-pair combinations, given a sequence of words.
@@ -163,7 +173,7 @@
 ;    than they would in a random planar tree parse.  In particular,
 ;    it generates more pairs between distant words than the planar tree
 ;    would. This could be ameliorated by simply not generating pairs
-;    for words that are more than 6 lengths apart. Or, altnernately,
+;    for words that are more than 6 lengths apart. Or, alternately,
 ;    only the statistics for closer pairs closer together than 6 could
 ;    be used.  Anyway, this is probably not a big deal, by itself.
 ;
@@ -171,7 +181,7 @@
 ;    (See below for the format).  This is might be interesting to
 ;    look at for academic reasons, but it currently puts a huge
 ;    impact on the size of the atomspace, and the size of the
-;    database, impacting performance in a sharply neggative way.
+;    database, impacting performance in a sharply negative way.
 ;    That's because, for every possible word-pair, chances are that
 ;    it will appear, sooner or later, with with every possible distance
 ;    from 1 to about 30. Each distance requires it's own atom to keep
@@ -186,7 +196,7 @@
 ;    hit is still huge.
 ;
 ; 3) On a per-sentence basis, when clique-counting is turned on, the
-;    number of databse updates increases by 3x-4x atom value updates.
+;    number of database updates increases by 3x-4x atom value updates.
 ;    If your database is on spinning disks, not SSD, this means that
 ;    database updates will be limited by the disk I/O subsystem, and
 ;    this additional traffic can slow down statistics gathering by...
@@ -212,10 +222,10 @@
 ;             WordNode "righty"
 ;         NumberNode 3
 ;
-; Here, the NumberNode encdes the distance between the words. It is always
+; Here, the NumberNode encodes the distance between the words. It is always
 ; at least one -- i.e. it is the difference between their ordinals.
 ;
-; Paramters:
+; Parameters:
 ; MAX-LEN -- integer: don't count a pair, if the words are farther apart
 ;            than this.
 ; RECORD-LEN -- boolean #t of #f: enable or disable recording of lengths.
@@ -229,12 +239,11 @@
 
 	; Create and count a word-pair, and the distance.
 	(define (count-one-pair left-seq right-seq)
-		(define pare (ListLink (gar left-seq) (gar right-seq)))
 		(define dist (- (get-no right-seq) (get-no left-seq)))
 
 		; Only count if the distance is less than the cap.
 		(if (<= dist MAX-LEN)
-			(begin
+			(let ((pare (ListLink (gar left-seq) (gar right-seq))))
 				(count-one-atom (EvaluationLink pair-pred pare))
 				(if RECORD-LEN
 					(count-one-atom
@@ -396,11 +405,14 @@
 
 ; ---------------------------------------------------------------------
 ;
-; Stupid monitoring utility that can be used to monitor how processing
-; is going so far. It counts how many sentences have been processed so
-; far. If called with a null argument, it increments the count; else it
-; just prints the count.
-(define-public monitor-rate
+; Simplistic parse-rate monitoring utility.
+;
+; Used to monitor how many sentences have been processed.  It counts
+; how many sentences have been processed so far. If called with a null
+; argument, it increments the count; else it prints the argument as
+; a string, followed by the count and rate.
+;
+(define-public monitor-parse-rate
 	(let ((mtx (make-mutex))
 			(cnt 0)
 			(start-time (- (current-time) 0.000001)))
@@ -415,46 +427,71 @@
 		)))
 
 ; ---------------------------------------------------------------------
-(define-public (observe-text plain-text)
+;
+; Report the average amount of time spent in GC
+;
+; Print statistics about how much time has been spent in GC.
+; Resets the stats after each call, so it only prints the stats
+; since the previous call.
+;
+(define-public report-avg-gc-cpu-time
+	(let ((last-gc (gc-stats))
+			(start-time (get-internal-real-time))
+			(run-time (get-internal-run-time)))
+		(lambda ()
+			(define now (get-internal-real-time))
+			(define run (get-internal-run-time))
+			(define cur (gc-stats))
+			(define gc-time-taken (* 1.0e-9 (- (cdar cur) (cdar last-gc))))
+			(define elapsed-time (* 1.0e-9 (- now start-time)))
+			(define cpu-time (* 1.0e-9 (- run run-time)))
+			(define ngc (- (assoc-ref cur 'gc-times)
+				(assoc-ref last-gc 'gc-times)))
+			(format #t "Elapsed: ~6f secs. Rate: ~5f gc/min %cpu-GC: ~5f%  %cpu-use: ~5f%\n"
+				elapsed-time
+				(/ (* ngc 60) elapsed-time)
+				(* 100 (/ gc-time-taken elapsed-time))
+				(* 100 (/ cpu-time elapsed-time))
+			)
+			(set! last-gc cur)
+			(set! start-time now)
+			(set! run-time run))))
+
+; --------------------------------------------------------------------
+
+(define-public (observe-text-mode plain-text observe-mode count-reach)
 "
- observe-text -- update word and word-pair counts by observing raw text.
+ observe-text-mode -- update word and word-pair counts by observing raw text.
+
+ There are currently two observing modes, set by observe-mode, both taking
+ an integer parameter:
+ - any: counts pairs of words linked by the LG parser in 'any' language.
+ 	   'count-reach' specifies how many linkages from LG-parser to use.
+ - clique: itearates over each word in the sentence and pairs it with
+           every word located within distance 'count-reach' to its right.
+           Distance is defined as the difference between words positions
+           in the sentence, so neighboring words have distance of 1.
 
  This is the first part of the learning algo: simply count the words
- and word-pairs oberved in incoming text. This takes in raw text, gets
+ and word-pairs observed in incoming text. This takes in raw text, gets
  it parsed, and then updates the counts for the observed words and word
  pairs.
 "
-	; try-catch wrapper around the counters. Due to a buggy RelEx
-	; (see documentation for `word-inst-get-word`), the function
-	; `update-clique-pair-counts` might throw.  If it does throw,
-	; then avoid doing any counting at all for this sentence.
-	;
-	; Note: update-clique-pair-counts commented out. If you want this,
-	; then uncommment it, and adjust the length.
+	; Count the atoms in the sentence, according to the counting method
+	; passed as argument, then delete the sentence.
+
 	; Note: update-disjunct-counts commented out. It generates some
 	; data, but none of it will be interesting to most people.
-	(define (update-counts sent)
-		(catch 'wrong-type-arg
-			(lambda () (begin
-				; 6 == max distance between words to count.
-				; See docs above for explanation.
-				; (update-clique-pair-counts sent 6 #f)
-				(update-word-counts sent)
-				(update-lg-link-counts sent)
-				; (update-disjunct-counts sent)
-			))
-			(lambda (key . args) #f)))
-
-	; Loop -- process any that we find. This will typically race
-	; against other threads, but I think that's OK.
-	(define (process-sents)
-		(let ((sent (get-one-new-sentence)))
-			(if (null? sent) '()
-				(begin
-					(update-counts sent)
-					(delete-sentence sent)
-					(monitor-rate '())
-					(process-sents)))))
+	(define (process-sent SENT cnt-mode win-size)
+		(update-word-counts SENT)
+		(if (equal? cnt-mode "any")
+			(update-lg-link-counts SENT)
+			(update-clique-pair-counts SENT win-size #f))
+		; If you uncomment this, be sure to also uncomment
+		; LgParseLink below, because LgParseMinimal is not enough.
+		; (update-disjunct-counts sent)
+		(delete-sentence SENT)
+		(monitor-parse-rate '()))
 
 	; -------------------------------------------------------
 	; Manually run the garbage collector, every now and then.
@@ -468,27 +505,6 @@
 				(set! cnt (+ cnt 1))
 				(if (eqv? 0 (modulo cnt how-often)) (gc)))))
 
-	; Report the average amount of time spent in GC
-	(define avg-gc-cpu-time
-		(let ((last-gc (gc-stats))
-				(start-time (get-internal-real-time))
-				(run-time (get-internal-run-time)))
-			(lambda ()
-				(define now (get-internal-real-time))
-				(define run (get-internal-run-time))
-				(define cur (gc-stats))
-				(define gc-time-taken (* 1.0e-9 (- (cdar cur) (cdar last-gc))))
-				(define elapsed-time (* 1.0e-9 (- now start-time)))
-				(define cpu-time (* 1.0e-9 (- run run-time)))
-				(format #t "Elapsed time: ~5f secs. GC: ~5f%  cpu-usage: ~5f%\n"
-					elapsed-time
-					(* 100 (/ gc-time-taken elapsed-time))
-					(* 100 (/ cpu-time elapsed-time))
-				)
-				(set! last-gc cur)
-				(set! start-time now)
-				(set! run-time run))))
-
 	; Perform GC whenever it gets larger than a fixed limit.
 	; Less than one GB should be enough, but the huge strings
 	; from relex seem to cause bad memory fragmentation.
@@ -501,35 +517,75 @@
 					(begin
 						(gc)
 						(set! cnt (+ cnt 1))
-						;(avg-gc-cpu-time)
+						;(report-avg-gc-cpu-time)
 					)))))
 
-	(relex-parse plain-text) ;; send plain-text to server
-	(process-sents)
-	(maybe-gc) ;; need agressive gc to keep RAM under control.
+	; Caution: RelEx-bassed parsing is deprecated, for three reasons:
+	; 1) Its slower, because it has to go to the relex server;
+	; 2) The RelEx server returns long strings containing scheme,
+	;    (often up to 8MBytes long) which cause HUGE GC issues for
+	;    guile - blowing up RAM usage.
+	; 3) The current guile-2.2 compiler has a bug compiling code
+	;    obtained from strings, and intermittently crashes. (A bug
+	;    report has been submitted, but is missing code to reproduce
+	;    it, and so is not getting fixed...)
+	;
+	; Use the RelEx server to parse the text via Link Grammar.
+	; Return a SentenceNode. Attention: when run in parallel,
+	; the returned SentenceNode is not necessarily that of the
+	; the one that was submitted for parsing! It might be just
+	; some other sentence that is sitting there, ready to go.
+	(define (relex-process TXT)
+		(define (do-all-sents)
+			(let ((sent (get-one-new-sentence)))
+				(if (not (null? sent))
+					(begin (process-sent sent obs-mode cnt-reach)
+						(do-all-sents)))))
+
+		(relex-parse TXT)
+		(do-all-sents)
+		(maybe-gc) ;; need agressive gc to keep RAM under control.
+	)
+
+	; Process the text locally (in RAM), with the LG API link or clique-count.
+	(define (local-process TXT obs-mode cnt-reach)
+		; try-catch wrapper for duplicated text. Here's the problem:
+		; If this routine is called in rapid succession with the same
+		; block of text, then only one PhraseNode and LgParseLink will
+		; be created for both calls.  The extract at the end will remove
+		; this, even while these atoms are being accessed by the second
+		; call.  Thus, `lgn` might throw because `phr` doesn't exist, or
+		; `cog-execute!` might throw because lgn does't exist. Either of
+		; the cog-extracts might also throw. Hide this messiness.
+		(catch #t
+			(lambda ()
+				(let* ((phr (Phrase TXT))
+						; needs at least one linkage for tokenization
+						(num-parses (if (equal? obs-mode "any") cnt-reach 1))
+						(lgn (LgParseMinimal phr (LgDict "any") (Number num-parses)))
+						(sent (cog-execute! lgn))
+					)
+					(process-sent sent obs-mode cnt-reach)
+					; Remove crud so it doesn't build up.
+					(cog-extract lgn)
+					(cog-extract phr)
+				))
+			(lambda (key . args) #f))
+	)
+
+	;; Send plain-text to the relex server
+	; (relex-process plain-text)
+
+	; Handle the plain-text locally
+	(local-process plain-text observe-mode count-reach)
+)
+
+(define-public (observe-text plain-text)
+"
+ Wrapper to maintain backwards compatibility in NLP pipeline.
+ Passes default parameters to observe-text-mode
+"
+	(observe-text-mode plain-text "any" 24)
 )
 
 ; ---------------------------------------------------------------------
-;
-; Some notes for hand-testing the code up above:
-;
-; (sql-open "postgres:///en_pairs?user=linas")
-; (use-relex-server "127.0.0.1" 4445)
-;
-; (define (prt x) (display x))
-;
-; (relex-parse "this is")
-; (get-new-parsed-sentences)
-;
-; (for-each-lg-link prt (get-new-parsed-sentences))
-;
-; (for-each-lg-link (lambda (x) (prt (make-word-link x)))
-;    (get-new-parsed-sentences))
-;
-; (for-each-lg-link (lambda (x) (prt (gddr (make-word-link x))))
-;    (get-new-parsed-sentences))
-;
-; (for-each-lg-link (lambda (x) (cog-inc-count! (make-word-link x) 1))
-;    (get-new-parsed-sentences))
-;
-; (observe-text "abcccccccccc  defffffffffffffffff")

@@ -37,6 +37,8 @@
 
 #include "AttentionParamQuery.h"
 
+class ImportanceDiffusionUTest;
+
 namespace opencog
 {
 /** \addtogroup grp_attention
@@ -48,10 +50,8 @@ class AttentionBank;
  */
 class ImportanceDiffusionBase : public Agent
 {
-private:
-    int sleep_time_ms;
-
 protected:
+    friend class ::ImportanceDiffusionUTest;
     AttentionBank* _bank;
     double maxSpreadPercentage;
     double hebbianMaxAllocationPercentage;
@@ -69,10 +69,9 @@ protected:
     void processDiffusionStack();
 
     HandleSeq diffusionSourceVector(void);
-    
+
     HandleSeq incidentAtoms(Handle);
     HandleSeq hebbianAdjacentAtoms(Handle);
-    void      removeHebbianLinks(HandleSeq& hseq);
 
     std::map<Handle, double> probabilityVector(HandleSeq);
     std::map<Handle, double> probabilityVectorIncident(HandleSeq);
@@ -82,9 +81,8 @@ protected:
 
     double calculateHebbianDiffusionPercentage(Handle);
     double calculateIncidentDiffusionPercentage(Handle);
-    
+
     void tradeSTI(DiffusionEventType);
-    void updateMaxSpreadPercentage();
 
     void diffuseAtom(Handle);
     virtual void spreadImportance() = 0;
@@ -93,10 +91,6 @@ protected:
 public:
     ImportanceDiffusionBase(CogServer&);
     virtual ~ImportanceDiffusionBase();
-
-    int get_sleep_time() { return sleep_time_ms; }
-
-    void set_sleep_time(int ms) { sleep_time_ms = ms; }
 
 }; // class
 

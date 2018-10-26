@@ -381,7 +381,7 @@ cog-atom? says #t for deleted handle...
          (GroundedSchema "scm: show-arg")
          (ListLink (Variable "$direction")))))
 
-(cog-bind look-rule-1)
+(cog-execute! look-rule-1)
 
 (grounded-talk 'luser "look up")
 (grounded-talk 'luser "look right")
@@ -713,7 +713,7 @@ Implication
             (EqualLink (Time 3000) (Variable "$x"))
             (Variable "$x")))
 
-(cog-bind getter2)
+(cog-execute! getter2)
 
 
 (define getter3 (BindLink
@@ -722,7 +722,7 @@ Implication
            (Variable "$x")))
 
 (TimeNode 2000) ;set atom for getter3 to find
-(cog-bind getter3)
+(cog-execute! getter3)
 
 
 (use-modules (opencog logger))
@@ -963,7 +963,7 @@ _as->get_num_atoms_of_type
 _size_by_type
 oresize should take an arg
 
-classserver().getNumberOfClasses() in the resize() method
+nameserver().getNumberOfClasses() in the resize() method
 Also in the ctor too.
 
 Fix the stupid subtype miterator
@@ -977,7 +977,7 @@ is currtype even used ????
 
 isize++
 _size_by_type[atom->_type] ++
-size_t new_size = classserver().getNumberOfClasses();
+size_t new_size = nameserver().getNumberOfClasses();
 +    _size_by_type.resize(new_size);
 
 Also: do NOT use NodeIndex::size() anywhere
@@ -1186,7 +1186,7 @@ todo: random expresion context is really part of self-model.
 
 ================================================
 
-(psi-rule-nocheck
+(psi-rule
 	;; context
 	(list (AndLink
 		(Predicate "input thing")
@@ -1221,14 +1221,14 @@ LEFT-WALL look.v to.r the right.n-u
 (StateLink current-sentence imp)
 (load "imperative-rules.scm")
 
-   (cog-bind show-rule-1)
+   (cog-execute! show-rule-1)
 clobbers it
 
 (load "imperative-rules.scm")
 
 ================================================
 
-(psi-rule-nocheck
+(psi-rule
 	;; context
 	(list (AndLink
 		(Predicate "input thing")
@@ -1263,7 +1263,7 @@ psi-controller-update-weights
 
 each rule has a weight.
 
-controled rules get a weight that is the tv-mean of the rule.
+controled rules get a weight that is the cog-tv-mean of the rule.
 
 demands are ConceptNodes, mean is a value-weight.
 
@@ -1344,7 +1344,7 @@ there is a settable action selector per demand
 
 the default action selector finds all rules associated with
 a demand, picks the one with the highest weight, and returns that.
-The weight is based on tv-mean right now.
+The weight is based on cog-tv-mean right now.
 
 split:
 rules.scm is core
@@ -1395,7 +1395,7 @@ How to fake it:
 
 ; Add face to the atomspace
 (EvaluationLink (PredicateNode "visible face") (ListLink (NumberNode 42)))
-aka 
+aka
 (use-modules (opencog eva-model))
 (make-new-face 42)
 (make-new-face 69)
@@ -1576,12 +1576,12 @@ obj-semantic-model-rule-1
 obj-semantic-model-rule-2
 
 (load "semantics.scm")
-(cog-bind obj-semantics-rule-1-ao)
+(cog-execute! obj-semantics-rule-1-ao)
 
 (Define (DefinedPredicate "Look-at-thing cmd")
  (DefinedPredicate "look at person"))
 
-(Define (DefinedSchema "current-speaker") 
+(Define (DefinedSchema "current-speaker")
 	(Get (State (Concept "last person who spoke") (Variable "$x"))))
 
 well, (Concept "last person who spoke") isn't being set.
@@ -1605,7 +1605,7 @@ XXX correct version of "looking" requires using the space server.
 py:gaze_at_point
 prints "(Eva looks to the left)"
 
- (cog-bind show-rule-1)
+ (cog-execute! show-rule-1)
 (define current-action (AnchorNode "*-action-*"))
 (StateLink current-action (WordNode "foobar"))
 
@@ -1658,4 +1658,3 @@ what are you doing?
 (cog-grounded? (List (Variable "x")))
 (cog-grounded? (List (Concept "x")))
 (cog-grounded? (List (Concept "x") (List (Variable "x"))))
-

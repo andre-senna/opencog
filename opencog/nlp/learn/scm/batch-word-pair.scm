@@ -1,7 +1,7 @@
 ;
 ; batch-word-pair.scm
 ;
-; Batch-compute the mutual information of pairs of nautral-language words.
+; Batch-compute the mutual information of pairs of natural-language words.
 ;
 ; Copyright (c) 2013, 2014, 2017 Linas Vepstas
 ;
@@ -74,12 +74,12 @@
   this particular pair are computed, they will be hung, as values,
   on the above EvaluationLink.
 
-  The 'item-pair method returns the above EvaluationLink, if it exists.
+  The 'get-pair method returns the above EvaluationLink, if it exists.
   The 'make-pair method will create it, if it does not exist.
 
   Left-side counts, frequencies, etc. such as N(*,y) P(*,y) or
   log_2 P(*,y) will be placed on the following, which is returned
-  by the 'left-wildcard methd:
+  by the 'left-wildcard method:
 
     EvaluationLink
        LinkGrammarRelationshipNode \"ANY\"
@@ -110,39 +110,48 @@
 
 		(define (get-left-type) 'WordNode)
 		(define (get-right-type) 'WordNode)
-		(define (get-pair-type) 'ListLink)
+		(define (get-pair-type) 'EvaluationLink)
 
 		; Return the atom holding the count, if it exists, else
 		; return nil.
-		(define (get-pair PAIR)
-			(cog-link 'EvaluationLink any-pair-pred PAIR))
+		(define (get-pair L-ATOM R-ATOM)
+			(define maybe-list (cog-link 'ListLink L-ATOM R-ATOM))
+			(if (null? maybe-list) '()
+				(cog-link 'EvaluationLink any-pair-pred maybe-list)))
 
 		; Create an atom to hold the count (if it doesn't exist already).
-		(define (make-pair PAIR)
-			(EvaluationLink any-pair-pred PAIR))
+		(define (make-pair L-ATOM R-ATOM)
+			(EvaluationLink any-pair-pred (List L-ATOM R-ATOM)))
+
+		; Return the left member of the pair. Given the pair-atom,
+		; locate the left-side atom.
+		(define (get-left-element PAIR)
+			(gadr PAIR))
+		(define (get-right-element PAIR)
+			(gddr PAIR))
 
 		; Return the raw observational count on PAIR. If the counter for
-		; PAIR does not exist (was not oberved), then return 0.
-		(define (get-pair-count PAIR)
-			(define pr (get-pair PAIR))
+		; PAIR does not exist (was not observed), then return 0.
+		(define (get-pair-count L-ATOM R-ATOM)
+			(define pr (get-pair L-ATOM R-ATOM))
 			(if (null? pr) 0 (get-count pr)))
 
 		; Caution: this unconditionally creates the wildcard pair!
 		(define (get-left-wildcard WORD)
-			(make-pair (ListLink any-left WORD)))
+			(make-pair any-left WORD))
 
 		; Caution: this unconditionally creates the wildcard pair!
 		(define (get-right-wildcard WORD)
-			(make-pair (ListLink WORD any-right)))
+			(make-pair WORD any-right))
 
 		(define (get-wild-wild)
-			(make-pair (ListLink any-left any-right)))
+			(make-pair any-left any-right))
 
 		; get-all-pairs - return a list holding all of the observed
 		; word-pairs.  Caution: this can be tens of millions long!
 		(define (do-get-all-pairs)
 			; The list of pairs is mostly just the incoming set of the
-			; ANY node. However, this does include some junk, sooo ...
+			; predicate node. However, this does include some junk, sooo ...
 			; hey, both left and right better be words.
 		   (filter!
 				(lambda (pair)
@@ -164,21 +173,41 @@
 				(- (current-time) start-time))
 		)
 
+		; Delete the pairs from the atomspace AND the database.
+		; But only those that are currently in the atomspace are
+		; deleted; if any are hiding in the database, they will not be
+		; touched.
+		(define (delete-any-pairs)
+			(define start-time (current-time))
+			(for-each (lambda (PAIR) (cog-delete-recursive (gdr PAIR)))
+				(cog-incoming-set any-pair-pred))
+			(cog-delete any-pair-pred)
+			(cog-delete any-left)
+			(cog-delete any-right)
+			(format #t "Elapsed time to delete ANY-link pairs: ~A secs\n"
+				(- (current-time) start-time))
+		)
+
 		; Methods on the object
 		(lambda (message . args)
 			(apply (case message
 					((name) (lambda () "Link Grammar ANY link Word Pairs"))
+					((id)   (lambda () "ANY"))
 					((left-type) get-left-type)
 					((right-type) get-right-type)
 					((pair-type) get-pair-type)
 					((pair-count) get-pair-count)
-					((item-pair) get-pair)
+					((get-pair) get-pair)
+					((get-count) get-count)
 					((make-pair) make-pair)
+					((left-element) get-left-element)
+					((right-element) get-right-element)
 					((left-wildcard) get-left-wildcard)
 					((right-wildcard) get-right-wildcard)
 					((wild-wild) get-wild-wild)
 					((all-pairs) get-all-pairs)
 					((fetch-pairs) fetch-any-pairs)
+					((delete-pairs) delete-any-pairs)
 					((provides) (lambda (symb) #f))
 					((filters?) (lambda () #f))
 					(else (error "Bad method call on ANY-link:" message)))
@@ -211,38 +240,47 @@
 
 		(define (get-left-type) 'WordNode)
 		(define (get-right-type) 'WordNode)
-		(define (get-pair-type) 'ListLink)
+		(define (get-pair-type) 'EvaluationLink)
 
 		; Return the atom holding the count, if it exists, else
 		; return nil.
-		(define (get-pair PAIR)
-			(cog-link 'EvaluationLink pair-pred PAIR))
+		(define (get-pair L-ATOM R-ATOM)
+			(define maybe-list (cog-link 'ListLink L-ATOM R-ATOM))
+			(if (null? maybe-list) '()
+				(cog-link 'EvaluationLink pair-pred maybe-list)))
 
 		; Create an atom to hold the count (if it doesn't exist already).
-		(define (make-pair PAIR)
-			(EvaluationLink pair-pred PAIR))
+		(define (make-pair L-ATOM R-ATOM)
+			(EvaluationLink pair-pred (List L-ATOM R-ATOM)))
+
+		; Return the left member of the pair. Given the pair-atom,
+		; locate the left-side atom.
+		(define (get-left-element PAIR)
+			(gadr PAIR))
+		(define (get-right-element PAIR)
+			(gddr PAIR))
 
 		; Return the raw observational count on PAIR.
-		; If the PAIR does not exist (was not oberved) return 0.
-		(define (get-pair-count PAIR)
-			(define pr (get-pair PAIR))
+		; If the PAIR does not exist (was not observed) return 0.
+		(define (get-pair-count L-ATOM R-ATOM)
+			(define pr (get-pair L-ATOM R-ATOM))
 			(if (null? pr) 0 (get-count pr)))
 
 		(define (get-left-wildcard WORD)
-			(make-pair (ListLink any-left WORD)))
+			(make-pair any-left WORD))
 
 		(define (get-right-wildcard WORD)
-			(make-pair (ListLink WORD any-right)))
+			(make-pair WORD any-right))
 
 		(define (get-wild-wild)
-			(make-pair (ListLink any-left any-right)))
+			(make-pair any-left any-right))
 
 		; get-all-pairs - return a list holding all of the observed
 		; word-pairs.  Caution: this can be tens of millions long, and
 		; take many hours to run!
 		(define (do-get-all-pairs)
 			; The list of pairs is mostly just the incoming set of the
-			; ANY node. However, this does include some junk, sooo ...
+			; predicate node. However, this does include some junk, sooo ...
 			; hey, both left and right better be words.
 		   (filter!
 				(lambda (pair)
@@ -267,12 +305,16 @@
 		(lambda (message . args)
 			(apply (case message
 					((name) (lambda () "Sentence Clique Word Pairs"))
+					((id)   (lambda () "cliq"))
 					((left-type) get-left-type)
 					((right-type) get-right-type)
 					((pair-type) get-pair-type)
 					((pair-count) get-pair-count)
-					((item-pair) get-pair)
+					((get-pair) get-pair)
+					((get-count) get-count)
 					((make-pair) make-pair)
+					((left-element) get-left-element)
+					((right-element) get-right-element)
 					((left-wildcard) get-left-wildcard)
 					((right-wildcard) get-right-wildcard)
 					((wild-wild) get-wild-wild)
@@ -327,42 +369,53 @@
 
 		(define (get-left-type) 'WordNode)
 		(define (get-right-type) 'WordNode)
-		(define (get-pair-type) 'ListLink)
+		(define (get-pair-type) 'EvaluationLink)
 
 		; Return the atom holding the count, if it exists, else
 		; return nil.
-		(define (get-pair PAIR)
-			(cog-link 'EvaluationLink pair-max PAIR))
+		(define (get-pair L-ATOM R-ATOM)
+			(define maybe-list (cog-link 'ListLink L-ATOM R-ATOM))
+			(if (null? maybe-list) '()
+				(cog-link 'EvaluationLink pair-max maybe-list)))
 
 		; Create an atom to hold the count (if it doesn't exist already).
-		(define (make-pair PAIR)
-			(EvaluationLink pair-max PAIR))
+		(define (make-pair L-ATOM R-ATOM)
+			(EvaluationLink pair-max (ListLink L-ATOM R-ATOM)))
+
+		; Return the left member of the pair. Given the pair-atom,
+		; locate the left-side atom.
+		(define (get-left-element PAIR)
+			(gadr PAIR))
+		(define (get-right-element PAIR)
+			(gddr PAIR))
 
 		; Return the raw observational count on PAIR.
-		; If the PAIR does not exist (was not oberved) return 0.
+		; If the PAIR does not exist (was not observed) return 0.
 		; Return a list of atoms that hold the count.
-		(define (get-pair-count PAIR)
-			(fold
-				(lambda (pr sum) (+ sum (get-count pr)))
-				0
-				(filter!
-					(lambda (lnk) (<= (get-dist lnk) max-dist))
-					(cog-incoming-by-type PAIR 'ExecutionLink))))
+		(define (get-pair-count L-ATOM R-ATOM)
+			(define maybe-list (cog-link 'ListLink L-ATOM R-ATOM))
+			(if (null? maybe-list) 0
+				(fold
+					(lambda (pr sum) (+ sum (get-count pr)))
+					0
+					(filter!
+						(lambda (lnk) (<= (get-dist lnk) max-dist))
+						(cog-incoming-by-type maybe-list 'ExecutionLink)))))
 
 		(define (get-left-wildcard WORD)
-			(make-pair (ListLink any-left WORD)))
+			(make-pair any-left WORD))
 
 		(define (get-right-wildcard WORD)
-			(make-pair (ListLink WORD any-right)))
+			(make-pair WORD any-right))
 
 		(define (get-wild-wild)
-			(make-pair (ListLink any-left any-right)))
+			(make-pair any-left any-right))
 
 		; get-all-pairs - return a list holding all of the observed
 		; word-pairs.  Caution: this can be tens of millions long!
 		(define (do-get-all-pairs)
 			; The list of pairs is mostly just the incoming set of the
-			; ANY node. However, this does include some junk, sooo ...
+			; predicate node. However, this does include some junk, sooo ...
 			; hey, both left and right better be words.
 		   (filter!
 				(lambda (pair)
@@ -387,12 +440,16 @@
 		(lambda (message . args)
 			(apply (case message
 					((name) (lambda () "Sentence Clique Distance-Limited Word Pairs"))
+					((id)   (lambda () "cldist"))
 					((left-type) get-left-type)
 					((right-type) get-right-type)
 					((pair-type) get-pair-type)
 					((pair-count) get-pair-count)
-					((item-pair) get-pair)
+					((get-pair) get-pair)
+					((get-count) get-count)
 					((make-pair) make-pair)
+					((left-element) get-left-element)
+					((right-element) get-right-element)
 					((left-wildcard) get-left-wildcard)
 					((right-wildcard) get-right-wildcard)
 					((wild-wild) get-wild-wild)
@@ -409,21 +466,21 @@
 (define-public (verify-clique-pair-sums)
 "
   This checks consistency of the the clique-pair total count, with
-  the subcounts of each pair, accodring to the distance between
+  the subcounts of each pair, according to the distance between
   the words. The sum of the subtotals should equal the total.
   It should not throw.
 
   Example usage: (verify-clique-pair-sums)
 "
-	(define cliq (add-pair-count-api (make-clique-pair-api)))
-	(define dist (add-pair-count-api (make-distance-pair-api 10000000)))
+	(define cliq (make-clique-pair-api))
+	(define dist (make-distance-pair-api 10000000))
 	(define all-pairs (cliq 'all-pairs))
 
 	(define cnt 0)
 	(for-each
 		(lambda (PAIR)
 			(set! cnt (+ cnt 1))
-			(if (not (eqv? (cliq 'pair-count PAIR) (dist 'pair-count PAIR)))
+			(if (not (eqv? (cliq 'get-count PAIR) (dist 'get-count PAIR)))
 				(throw 'bad-count 'foobar PAIR)
 				(format #t "Its OK ~A\n" cnt)
 			))
@@ -471,6 +528,7 @@
 	(display "Finished loading sparse matrix pairs\n")
 
 	(batch-all-pair-mi LLOBJ)
+	(print-matrix-summary-report LLOBJ)
 )
 
 (define-public (batch-any-pairs)
@@ -500,7 +558,7 @@
 ; AND typecodes.typename='WordNode';
 ;
 ; If it all looks good, then:
-; (batch-all-pair-mi (make-any-link-api))
+; (batch-pairs (make-any-link-api))
 ;
 ; (define wtfl  (EvaluationLink  (LinkGrammarRelationshipNode "ANY")
 ;   (ListLink (AnyNode "left-word") (WordNode "famille"))))

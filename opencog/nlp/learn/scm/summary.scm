@@ -36,11 +36,11 @@
 
 (define-public (print-word-pair-report)
 "
-  print-word-pair-report - Summarize properties about wor-pairs.
+  print-word-pair-report - Summarize properties about word-pairs.
 "
 	(define any-pairs-obj (make-any-link-api))
-	(define wild-obj (add-pair-stars (any-pairs-obj)))
-	(define pca (add-pair-count-api wild-obj))
+	(define wild-obj (add-pair-stars any-pairs-obj))
+	(define pca (add-support-api wild-obj))
 
 	(define nww (pca 'wild-wild-count))
 
@@ -73,10 +73,7 @@
   contents of the atomspace.  Intended to summary language-learning
   status.
 "
-	(catch #t
-		(lambda ()
-			(print-sentence-report)
-		)
+	(catch #t (print-sentence-report)
 		(lambda (key . args)
 			(format #t "~A: ~A: ~A \n" key (car args) (cadr args))
 			#f

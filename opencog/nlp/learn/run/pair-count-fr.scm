@@ -16,7 +16,8 @@
 ; Tell opencog where the relex server is located.
 ; The port should match that in `relex-server-ady.sh`
 ; Note: this is the morphology split-into-two server.
-(use-relex-server "127.0.0.1" 4446)
+; Not using RelEx any longer.
+; (use-relex-server "127.0.0.1" 4446)
 
 ;;; Start the network REPL server on port 17003
 ;;; Unfortunately, this runs about 3x slower than the cogserver,
@@ -33,7 +34,7 @@
 ;;;)
 
 ; Start the cogserver on port 17003
-(start-cogserver "opencog-fr.conf")
+(start-cogserver "config/opencog-pairs-fr.conf")
 
 ; Open the database.
 ; Edit the below, setting the database name, user and password.
