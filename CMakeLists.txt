@@ -737,6 +737,7 @@ SUMMARY_ADD("SpaceTime" "3D Space-Time object tracker" HAVE_OCTOMAP)
 SUMMARY_ADD("Unit tests" "Unit tests" CXXTEST_FOUND)
 SUMMARY_ADD("NLP" "Natural Language Processing" HAVE_NLP)
 SUMMARY_ADD("PatternMiner" "Pattern Miner" HAVE_ATOMSPACE)
+SUMMARY_ADD("SNET services" "SingularityNet services" HAVE_ATOMSPACE)
 SUMMARY_ADD("Haskell codes" "Logic via Lojban" HAVE_STACK AND BUILD_LOJBAN)
 
 SUMMARY_SHOW()

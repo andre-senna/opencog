@@ -11,6 +11,8 @@ ADD_SUBDIRECTORY (learning)
 IF (HAVE_ATOMSPACE)
 	ADD_SUBDIRECTORY (nlp)
 	ADD_SUBDIRECTORY (spacetime)
+    # SingularityNET services
+    ADD_SUBDIRECTORY (snet-services)
 ENDIF (HAVE_ATOMSPACE)
 
 IF (HAVE_SERVER)
@@ -34,3 +36,4 @@ ENDIF (HAVE_CYTHON)
 
 # Graphics and visualization subsystems
 ADD_SUBDIRECTORY (visualization)
+

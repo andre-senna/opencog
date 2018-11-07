@@ -22,6 +22,23 @@ apt install -y tzdata
 ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
 dpkg-reconfigure --frontend noninteractive tzdata
 
+# Python 3.6
+
+# apt install -y python3
+# apt install -y python3-pip
+# 
+################################################################################
+# Manually install Python 3.6 in base images (e.g. Ubuntu 14.04) without the proper packages
+apt install -y build-essential checkinstall zlib1g-dev libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
+wget https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tar.xz
+tar xvf Python-3.6.5.tar.xz
+cd Python-3.6.5/
+./configure
+make -j8
+make install
+cd .. ; rm -rf Python-3.6.5/; rm -f Python-3.6.5.tar.xz
+################################################################################
+
 # C++ gRPC
 apt-get install -y build-essential autoconf libtool pkg-config
 apt-get install -y libgflags-dev libgtest-dev
@@ -40,6 +57,12 @@ apt-get install -y bazel
 apt-get upgrade -y bazel
 bazel build :all
 make install
+#mkdir -p /opt/grpc/bin
+#mkdir -p /opt/protobuf/bin
+#sudo ln -s /usr/local/include/google/protobuf /opt/protobuf/include
+#sudo ln -s /usr/local/lib/python3.6/site-packages/google/protobuf /opt/protobuf/lib
+#sudo ln -s /usr/local/include/grpc /opt/grpc/include
+#sudo ln -s /usr/local/lib/python3.6/site-packages/grpc /opt/grpc/lib
 
 # Protocol Buffers v3
 cd third_party/protobuf
@@ -47,27 +70,11 @@ make
 make install
 
 cd ../../..
+#rm -rf grpc
 
 mkdir /opt/snet
 cd /opt/snet
 
-# Python 3.6
-
-apt install -y python3
-apt install -y python3-pip
-
-################################################################################
-# Manually install Python 3.6 in base images without the proper packages
-#
-#apt install -y build-essential checkinstall zlib1g-dev libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
-#wget https://www.python.org/ftp/python/3.6.5/Python-3.6.5.tar.xz
-#tar xvf Python-3.6.5.tar.xz
-#cd Python-3.6.5/
-#./configure
-#make -j8
-#make altinstall
-#cd..; rm -rf Python-3.6.5/; rm -f Python-3.6.5.tar.xz
-################################################################################
 
 # NodeJS 8.x
 
@@ -134,6 +141,6 @@ cd /tmp/install
 git clone https://github.com/singnet/snet-cli
 cd snet-cli
 ./scripts/blockchain install
-pip3.6 install -e .
+pip3 install -e .
 
-cd ~
+cd /opencog/opencog/snet-services
