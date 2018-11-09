@@ -1,0 +1,4 @@
+../bin/server &
+sleep 1
+../bin/client PatternMiner https://raw.githubusercontent.com/singnet/opencog/master/opencog/learning/PatternMiner/ugly_male_soda-drinker_corpus.scm '{"Pattern_Max_Gram" : "4", "Max_thread_num" : "1"}'
+kill `ps guxw | grep server | grep bin | cut -d" " -f4`

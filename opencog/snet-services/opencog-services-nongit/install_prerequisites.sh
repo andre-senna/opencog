@@ -39,7 +39,7 @@ make install
 cd .. ; rm -rf Python-3.6.5/; rm -f Python-3.6.5.tar.xz
 ################################################################################
 
-# C++ gRPC
+# C++ gRPC and Protocol Buffers v3
 apt-get install -y build-essential autoconf libtool pkg-config
 apt-get install -y libgflags-dev libgtest-dev
 apt-get install -y clang libc++-dev
@@ -57,30 +57,23 @@ apt-get install -y bazel
 apt-get upgrade -y bazel
 bazel build :all
 make install
-#mkdir -p /opt/grpc/bin
-#mkdir -p /opt/protobuf/bin
-#sudo ln -s /usr/local/include/google/protobuf /opt/protobuf/include
-#sudo ln -s /usr/local/lib/python3.6/site-packages/google/protobuf /opt/protobuf/lib
-#sudo ln -s /usr/local/include/grpc /opt/grpc/include
-#sudo ln -s /usr/local/lib/python3.6/site-packages/grpc /opt/grpc/lib
-
-# Protocol Buffers v3
+# Proto3
 cd third_party/protobuf
 make 
 make install
-
 cd ../../..
-#rm -rf grpc
+#cd /opt/snet
+#curl -OL https://github.com/google/protobuf/releases/download/v3.4.0/protoc-3.4.0-linux-x86_64.zip
+#unzip protoc-3.4.0-linux-x86_64.zip -d protoc3
+#mv protoc3/bin/* /usr/local/bin/
+#mv protoc3/include/* /usr/local/include/
 
-mkdir /opt/snet
-cd /opt/snet
-
+rm -rf grpc
 
 # NodeJS 8.x
 
 apt install -y nodejs
 apt install -y npm
-
 ################################################################################
 # Manually install nodejs and npm in base images without the proper packages
 #
@@ -92,27 +85,13 @@ apt install -y npm
 # Go
 
 apt install -y golang-1.10
-mkdir /opt/snet/go
-#echo 'PS1="$PS1\n"' >> /root/.bashrc
+mkdir -p /opt/snet/go
+cd /opt/snet
 export GOPATH="/opt/snet/go"
 export PATH="$PATH:/opt/snet/go/bin:/usr/lib/go-1.10/bin"
-echo 'export GOPATH="/opt/snet/go"' >> /root/.bashrc
-echo 'export PATH="$PATH:/opt/snet/go/bin:/usr/lib/go-1.10/bin"' >> /root/.bashrc
-source /root/.bashrc
-
-# Go Extras
-
 go get -v -u github.com/golang/dep/cmd/dep
 go get -v -u github.com/golang/protobuf/protoc-gen-go
 go get -v -u golang.org/x/lint/golint
-
-# Proto3
-#
-#cd /opt/snet
-#curl -OL https://github.com/google/protobuf/releases/download/v3.4.0/protoc-3.4.0-linux-x86_64.zip
-#unzip protoc-3.4.0-linux-x86_64.zip -d protoc3
-#mv protoc3/bin/* /usr/local/bin/
-#mv protoc3/include/* /usr/local/include/
 
 # SNET Daemon
 
@@ -143,4 +122,9 @@ cd snet-cli
 ./scripts/blockchain install
 pip3 install -e .
 
-cd /opencog/opencog/snet-services
+# Opencog services
+
+apt install -y libcurl4-openssl-dev
+cd /tmp
+wget http://ftp.cn.debian.org/debian/pool/main/n/nlohmann-json/nlohmann-json-dev_2.1.1-1.1_all.deb
+apt install -y ./nlohmann-json-dev_2.1.1-1.1_all.deb
