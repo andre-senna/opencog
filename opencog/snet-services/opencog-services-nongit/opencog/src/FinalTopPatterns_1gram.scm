@@ -2,36 +2,36 @@
 
 
 
-;Pattern: Frequency = 20, SurprisingnessI = 0, SurprisingnessII = 0
+;Pattern: Frequency = 4, SurprisingnessI = 0, SurprisingnessII = 0
 (InheritanceLink
-  (PatternVariableNode "$var_1")
-  (ConceptNode "human")
-)
-
-
-
-
-;Pattern: Frequency = 2, SurprisingnessI = 0, SurprisingnessII = 0
-(InheritanceLink
-  (ConceptNode "Jadrian")
+  (ConceptNode "Cason")
   (PatternVariableNode "$var_1")
 )
 
 
 
 
-;Pattern: Frequency = 2, SurprisingnessI = 0, SurprisingnessII = 0
+;Pattern: Frequency = 3, SurprisingnessI = 0, SurprisingnessII = 0
 (InheritanceLink
-  (ConceptNode "Bob")
+  (ConceptNode "Breonna")
   (PatternVariableNode "$var_1")
 )
 
 
 
 
-;Pattern: Frequency = 2, SurprisingnessI = 0, SurprisingnessII = 0
+;Pattern: Frequency = 3, SurprisingnessI = 0, SurprisingnessII = 0
 (InheritanceLink
-  (ConceptNode "Mike")
+  (ConceptNode "Jassy")
+  (PatternVariableNode "$var_1")
+)
+
+
+
+
+;Pattern: Frequency = 3, SurprisingnessI = 0, SurprisingnessII = 0
+(InheritanceLink
+  (ConceptNode "Emily")
   (PatternVariableNode "$var_1")
 )
 
@@ -49,7 +49,7 @@
 
 ;Pattern: Frequency = 2, SurprisingnessI = 0, SurprisingnessII = 0
 (InheritanceLink
-  (ConceptNode "Rio")
+  (ConceptNode "Mike")
   (PatternVariableNode "$var_1")
 )
 

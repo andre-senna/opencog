@@ -17,6 +17,13 @@
 ;Pattern: Frequency = 10
 (InheritanceLink
   (PatternVariableNode "$var_1")
+  (ConceptNode "ugly")
+)
+
+
+;Pattern: Frequency = 10
+(InheritanceLink
+  (PatternVariableNode "$var_1")
   (ConceptNode "woman")
 )
 
@@ -28,10 +35,10 @@
 )
 
 
-;Pattern: Frequency = 10
+;Pattern: Frequency = 4
 (InheritanceLink
+  (ConceptNode "Cason")
   (PatternVariableNode "$var_1")
-  (ConceptNode "ugly")
 )
 
 
@@ -45,13 +52,6 @@
 ;Pattern: Frequency = 4
 (InheritanceLink
   (ConceptNode "Davion")
-  (PatternVariableNode "$var_1")
-)
-
-
-;Pattern: Frequency = 4
-(InheritanceLink
-  (ConceptNode "Cason")
   (PatternVariableNode "$var_1")
 )
 
@@ -72,14 +72,7 @@
 
 ;Pattern: Frequency = 3
 (InheritanceLink
-  (ConceptNode "Kecia")
-  (PatternVariableNode "$var_1")
-)
-
-
-;Pattern: Frequency = 3
-(InheritanceLink
-  (ConceptNode "Jaleesa")
+  (ConceptNode "Jassy")
   (PatternVariableNode "$var_1")
 )
 
@@ -107,20 +100,6 @@
 
 ;Pattern: Frequency = 3
 (InheritanceLink
-  (ConceptNode "Emily")
-  (PatternVariableNode "$var_1")
-)
-
-
-;Pattern: Frequency = 3
-(InheritanceLink
-  (ConceptNode "Jassy")
-  (PatternVariableNode "$var_1")
-)
-
-
-;Pattern: Frequency = 3
-(InheritanceLink
   (ConceptNode "Jenica")
   (PatternVariableNode "$var_1")
 )
@@ -128,7 +107,14 @@
 
 ;Pattern: Frequency = 3
 (InheritanceLink
-  (ConceptNode "Breonna")
+  (ConceptNode "Kecia")
+  (PatternVariableNode "$var_1")
+)
+
+
+;Pattern: Frequency = 3
+(InheritanceLink
+  (ConceptNode "Jaleesa")
   (PatternVariableNode "$var_1")
 )
 
@@ -140,23 +126,23 @@
 )
 
 
+;Pattern: Frequency = 3
+(InheritanceLink
+  (ConceptNode "Emily")
+  (PatternVariableNode "$var_1")
+)
+
+
+;Pattern: Frequency = 3
+(InheritanceLink
+  (ConceptNode "Breonna")
+  (PatternVariableNode "$var_1")
+)
+
+
 ;Pattern: Frequency = 2
 (InheritanceLink
   (ConceptNode "Rio")
-  (PatternVariableNode "$var_1")
-)
-
-
-;Pattern: Frequency = 2
-(InheritanceLink
-  (ConceptNode "Zac")
-  (PatternVariableNode "$var_1")
-)
-
-
-;Pattern: Frequency = 2
-(InheritanceLink
-  (ConceptNode "Mike")
   (PatternVariableNode "$var_1")
 )
 
@@ -171,6 +157,20 @@
 ;Pattern: Frequency = 2
 (InheritanceLink
   (ConceptNode "Jadrian")
+  (PatternVariableNode "$var_1")
+)
+
+
+;Pattern: Frequency = 2
+(InheritanceLink
+  (ConceptNode "Mike")
+  (PatternVariableNode "$var_1")
+)
+
+
+;Pattern: Frequency = 2
+(InheritanceLink
+  (ConceptNode "Zac")
   (PatternVariableNode "$var_1")
 )
 

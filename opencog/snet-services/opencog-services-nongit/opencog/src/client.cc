@@ -22,41 +22,65 @@ class ServiceClient {
 
         // TEST_CODE
 
-        void doSomething(int argc, char** argv) {
+        void usage()
+        {
+            printf("Usage: client sync|async <command> <args>\n(0 to 5 args)\n");
+            exit(0);
+        }
+
+        void doSomething(int argc, char** argv)
+        {
 
             Command cmd;
-            CommandOutput output;
             Status status;
             ClientContext context;
 
-            if ((argc < 2) || (argc > 7)) {
-                printf("Usage: client <cmd> <args>\n(0 to 5 args)\n");
-                exit(0);
+            if ((argc < 3) || (argc > 8)) {
+                usage();
             } 
 
-            cmd.set_cmd(argv[1]);
-            unsigned int nargs = argc - 2;
+            bool sync;
+            if (!strcmp(argv[1], "sync")) {
+                sync = true;
+            } else if (!strcmp(argv[1], "async")) {
+                sync = false;
+            } else {
+                usage();
+            }
+
+            cmd.set_cmd(argv[2]);
+
+            unsigned int nargs = argc - 3;
             unsigned int p = 0;
             while (true) {
                 if (p++ == nargs) break;
-                cmd.set_arg1(argv[p + 1]);
+                cmd.set_arg1(argv[p + 2]);
                 if (p++ == nargs) break;
-                cmd.set_arg2(argv[p + 1]);
+                cmd.set_arg2(argv[p + 2]);
                 if (p++ == nargs) break;
-                cmd.set_arg3(argv[p + 1]);
+                cmd.set_arg3(argv[p + 2]);
                 if (p++ == nargs) break;
-                cmd.set_arg4(argv[p + 1]);
+                cmd.set_arg4(argv[p + 2]);
                 if (p++ == nargs) break;
-                cmd.set_arg5(argv[p + 1]);
+                cmd.set_arg5(argv[p + 2]);
             }
 
-
-            status = stub_->execute(&context, cmd, &output);
+            if (sync) {
+                CommandOutput output;
+                status = stub_->execute(&context, cmd, &output);
+                if (status.ok()) {
+                    printf("%s\n", output.s().c_str());
+                }
+            } else {
+                Ticket ticket;
+                status = stub_->asynchronousTask(&context, cmd, &ticket);
+                if (status.ok()) {
+                    printf("Task \"%s\" started. See results in: %s\n", cmd.cmd().c_str(), ticket.url().c_str());
+                }
+            }
 
             if (! status.ok()) {
                 printf("RPC failed - %s\n", status.error_message().c_str());
-            } else {
-                printf("%s\n", output.s().c_str());
             }
         }
 

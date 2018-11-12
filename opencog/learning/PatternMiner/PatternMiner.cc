@@ -3086,8 +3086,7 @@ void PatternMiner::runInterestingnessEvaluation()
 
             OutPutStaticsToCsvFile(cur_gram);
 
-            if (cur_gram == param.MAX_GRAM)
-                break;
+            //if (cur_gram == param.MAX_GRAM) break;
 
             vector<HTreeNode*> curGramPatterns = patternsForGram[cur_gram-1];
 

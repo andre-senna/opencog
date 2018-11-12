@@ -2,10 +2,6 @@ syntax = "proto3";
 
 package opencogservices;
 
-message CommandOutput {
-    string s = 1;
-}
-
 message Command {
     string cmd = 1;
     string arg1 = 2;
@@ -15,6 +11,15 @@ message Command {
     string arg5 = 6;
 }
 
+message CommandOutput {
+    string s = 1;
+}
+
+message Ticket {
+    string url = 1;
+}
+
 service ServiceDefinition {
     rpc execute(Command) returns (CommandOutput) {}
+    rpc asynchronousTask(Command) returns (Ticket) {}
 }

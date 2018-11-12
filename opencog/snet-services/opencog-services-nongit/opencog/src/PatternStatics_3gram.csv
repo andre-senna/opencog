@@ -1,7 +1,7 @@
 Frequency,Surprisingness_I,Surprisingness_II,II_Surprisingness_b, max_b_subpattern_num
-5,5,1e+09,1,0
-5,2,1e+09,1,0
-5,2,1e+09,1,0
-5,2,1e+09,1,0
-5,2,1e+09,1,0
-5,2,1e+09,1,0
+5,5,0,1,0
+5,2,0,1,0
+5,2,0,1,0
+5,2,0,1,0
+5,2,0,1,0
+5,2,0,1,0

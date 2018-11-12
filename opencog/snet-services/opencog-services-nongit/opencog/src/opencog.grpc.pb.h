@@ -41,9 +41,18 @@ class ServiceDefinition final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::CommandOutput>> PrepareAsyncexecute(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::CommandOutput>>(PrepareAsyncexecuteRaw(context, request, cq));
     }
+    virtual ::grpc::Status asynchronousTask(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::opencogservices::Ticket* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::Ticket>> AsyncasynchronousTask(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::Ticket>>(AsyncasynchronousTaskRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::Ticket>> PrepareAsyncasynchronousTask(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::Ticket>>(PrepareAsyncasynchronousTaskRaw(context, request, cq));
+    }
   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::CommandOutput>* AsyncexecuteRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::CommandOutput>* PrepareAsyncexecuteRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::Ticket>* AsyncasynchronousTaskRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::opencogservices::Ticket>* PrepareAsyncasynchronousTaskRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -55,12 +64,22 @@ class ServiceDefinition final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::opencogservices::CommandOutput>> PrepareAsyncexecute(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::opencogservices::CommandOutput>>(PrepareAsyncexecuteRaw(context, request, cq));
     }
+    ::grpc::Status asynchronousTask(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::opencogservices::Ticket* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>> AsyncasynchronousTask(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>>(AsyncasynchronousTaskRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>> PrepareAsyncasynchronousTask(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>>(PrepareAsyncasynchronousTaskRaw(context, request, cq));
+    }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
     ::grpc::ClientAsyncResponseReader< ::opencogservices::CommandOutput>* AsyncexecuteRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::opencogservices::CommandOutput>* PrepareAsyncexecuteRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>* AsyncasynchronousTaskRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>* PrepareAsyncasynchronousTaskRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_execute_;
+    const ::grpc::internal::RpcMethod rpcmethod_asynchronousTask_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -69,6 +88,7 @@ class ServiceDefinition final {
     Service();
     virtual ~Service();
     virtual ::grpc::Status execute(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::CommandOutput* response);
+    virtual ::grpc::Status asynchronousTask(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::Ticket* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_execute : public BaseClass {
@@ -90,7 +110,27 @@ class ServiceDefinition final {
       ::grpc::Service::RequestAsyncUnary(0, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_execute<Service > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_asynchronousTask : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_asynchronousTask() {
+      ::grpc::Service::MarkMethodAsync(1);
+    }
+    ~WithAsyncMethod_asynchronousTask() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status asynchronousTask(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::Ticket* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestasynchronousTask(::grpc::ServerContext* context, ::opencogservices::Command* request, ::grpc::ServerAsyncResponseWriter< ::opencogservices::Ticket>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_execute<WithAsyncMethod_asynchronousTask<Service > > AsyncService;
   template <class BaseClass>
   class WithGenericMethod_execute : public BaseClass {
    private:
@@ -104,6 +144,23 @@ class ServiceDefinition final {
     }
     // disable synchronous version of this method
     ::grpc::Status execute(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::CommandOutput* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_asynchronousTask : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_asynchronousTask() {
+      ::grpc::Service::MarkMethodGeneric(1);
+    }
+    ~WithGenericMethod_asynchronousTask() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status asynchronousTask(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::Ticket* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -129,6 +186,26 @@ class ServiceDefinition final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_asynchronousTask : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_asynchronousTask() {
+      ::grpc::Service::MarkMethodRaw(1);
+    }
+    ~WithRawMethod_asynchronousTask() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status asynchronousTask(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::Ticket* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestasynchronousTask(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(1, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_execute : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
@@ -148,9 +225,29 @@ class ServiceDefinition final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status Streamedexecute(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::opencogservices::Command,::opencogservices::CommandOutput>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_execute<Service > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_asynchronousTask : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_asynchronousTask() {
+      ::grpc::Service::MarkMethodStreamed(1,
+        new ::grpc::internal::StreamedUnaryHandler< ::opencogservices::Command, ::opencogservices::Ticket>(std::bind(&WithStreamedUnaryMethod_asynchronousTask<BaseClass>::StreamedasynchronousTask, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_asynchronousTask() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status asynchronousTask(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::Ticket* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedasynchronousTask(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::opencogservices::Command,::opencogservices::Ticket>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_execute<WithStreamedUnaryMethod_asynchronousTask<Service > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_execute<Service > StreamedService;
+  typedef WithStreamedUnaryMethod_execute<WithStreamedUnaryMethod_asynchronousTask<Service > > StreamedService;
 };
 
 }  // namespace opencogservices

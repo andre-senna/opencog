@@ -38,7 +38,7 @@ namespace protobuf_opencog_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[2];
+  static const ::google::protobuf::internal::ParseTable schema[3];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -52,127 +52,20 @@ extern CommandDefaultTypeInternal _Command_default_instance_;
 class CommandOutput;
 class CommandOutputDefaultTypeInternal;
 extern CommandOutputDefaultTypeInternal _CommandOutput_default_instance_;
+class Ticket;
+class TicketDefaultTypeInternal;
+extern TicketDefaultTypeInternal _Ticket_default_instance_;
 }  // namespace opencogservices
 namespace google {
 namespace protobuf {
 template<> ::opencogservices::Command* Arena::CreateMaybeMessage<::opencogservices::Command>(Arena*);
 template<> ::opencogservices::CommandOutput* Arena::CreateMaybeMessage<::opencogservices::CommandOutput>(Arena*);
+template<> ::opencogservices::Ticket* Arena::CreateMaybeMessage<::opencogservices::Ticket>(Arena*);
 }  // namespace protobuf
 }  // namespace google
 namespace opencogservices {
 
 // ===================================================================
-
-class CommandOutput : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:opencogservices.CommandOutput) */ {
- public:
-  CommandOutput();
-  virtual ~CommandOutput();
-
-  CommandOutput(const CommandOutput& from);
-
-  inline CommandOutput& operator=(const CommandOutput& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  #if LANG_CXX11
-  CommandOutput(CommandOutput&& from) noexcept
-    : CommandOutput() {
-    *this = ::std::move(from);
-  }
-
-  inline CommandOutput& operator=(CommandOutput&& from) noexcept {
-    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
-      if (this != &from) InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-  #endif
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const CommandOutput& default_instance();
-
-  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
-  static inline const CommandOutput* internal_default_instance() {
-    return reinterpret_cast<const CommandOutput*>(
-               &_CommandOutput_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    0;
-
-  void Swap(CommandOutput* other);
-  friend void swap(CommandOutput& a, CommandOutput& b) {
-    a.Swap(&b);
-  }
-
-  // implements Message ----------------------------------------------
-
-  inline CommandOutput* New() const final {
-    return CreateMaybeMessage<CommandOutput>(NULL);
-  }
-
-  CommandOutput* New(::google::protobuf::Arena* arena) const final {
-    return CreateMaybeMessage<CommandOutput>(arena);
-  }
-  void CopyFrom(const ::google::protobuf::Message& from) final;
-  void MergeFrom(const ::google::protobuf::Message& from) final;
-  void CopyFrom(const CommandOutput& from);
-  void MergeFrom(const CommandOutput& from);
-  void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) final;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const final;
-  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
-      bool deterministic, ::google::protobuf::uint8* target) const final;
-  int GetCachedSize() const final { return _cached_size_.Get(); }
-
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(CommandOutput* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // string s = 1;
-  void clear_s();
-  static const int kSFieldNumber = 1;
-  const ::std::string& s() const;
-  void set_s(const ::std::string& value);
-  #if LANG_CXX11
-  void set_s(::std::string&& value);
-  #endif
-  void set_s(const char* value);
-  void set_s(const char* value, size_t size);
-  ::std::string* mutable_s();
-  ::std::string* release_s();
-  void set_allocated_s(::std::string* s);
-
-  // @@protoc_insertion_point(class_scope:opencogservices.CommandOutput)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr s_;
-  mutable ::google::protobuf::internal::CachedSize _cached_size_;
-  friend struct ::protobuf_opencog_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
 
 class Command : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:opencogservices.Command) */ {
  public:
@@ -209,7 +102,7 @@ class Command : public ::google::protobuf::Message /* @@protoc_insertion_point(c
                &_Command_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    0;
 
   void Swap(Command* other);
   friend void swap(Command& a, Command& b) {
@@ -358,6 +251,228 @@ class Command : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   mutable ::google::protobuf::internal::CachedSize _cached_size_;
   friend struct ::protobuf_opencog_2eproto::TableStruct;
 };
+// -------------------------------------------------------------------
+
+class CommandOutput : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:opencogservices.CommandOutput) */ {
+ public:
+  CommandOutput();
+  virtual ~CommandOutput();
+
+  CommandOutput(const CommandOutput& from);
+
+  inline CommandOutput& operator=(const CommandOutput& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  CommandOutput(CommandOutput&& from) noexcept
+    : CommandOutput() {
+    *this = ::std::move(from);
+  }
+
+  inline CommandOutput& operator=(CommandOutput&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const CommandOutput& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const CommandOutput* internal_default_instance() {
+    return reinterpret_cast<const CommandOutput*>(
+               &_CommandOutput_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    1;
+
+  void Swap(CommandOutput* other);
+  friend void swap(CommandOutput& a, CommandOutput& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline CommandOutput* New() const final {
+    return CreateMaybeMessage<CommandOutput>(NULL);
+  }
+
+  CommandOutput* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<CommandOutput>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const CommandOutput& from);
+  void MergeFrom(const CommandOutput& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(CommandOutput* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string s = 1;
+  void clear_s();
+  static const int kSFieldNumber = 1;
+  const ::std::string& s() const;
+  void set_s(const ::std::string& value);
+  #if LANG_CXX11
+  void set_s(::std::string&& value);
+  #endif
+  void set_s(const char* value);
+  void set_s(const char* value, size_t size);
+  ::std::string* mutable_s();
+  ::std::string* release_s();
+  void set_allocated_s(::std::string* s);
+
+  // @@protoc_insertion_point(class_scope:opencogservices.CommandOutput)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr s_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_opencog_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class Ticket : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:opencogservices.Ticket) */ {
+ public:
+  Ticket();
+  virtual ~Ticket();
+
+  Ticket(const Ticket& from);
+
+  inline Ticket& operator=(const Ticket& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  #if LANG_CXX11
+  Ticket(Ticket&& from) noexcept
+    : Ticket() {
+    *this = ::std::move(from);
+  }
+
+  inline Ticket& operator=(Ticket&& from) noexcept {
+    if (GetArenaNoVirtual() == from.GetArenaNoVirtual()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+  #endif
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const Ticket& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const Ticket* internal_default_instance() {
+    return reinterpret_cast<const Ticket*>(
+               &_Ticket_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  void Swap(Ticket* other);
+  friend void swap(Ticket& a, Ticket& b) {
+    a.Swap(&b);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline Ticket* New() const final {
+    return CreateMaybeMessage<Ticket>(NULL);
+  }
+
+  Ticket* New(::google::protobuf::Arena* arena) const final {
+    return CreateMaybeMessage<Ticket>(arena);
+  }
+  void CopyFrom(const ::google::protobuf::Message& from) final;
+  void MergeFrom(const ::google::protobuf::Message& from) final;
+  void CopyFrom(const Ticket& from);
+  void MergeFrom(const Ticket& from);
+  void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) final;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const final;
+  ::google::protobuf::uint8* InternalSerializeWithCachedSizesToArray(
+      bool deterministic, ::google::protobuf::uint8* target) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Ticket* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // string url = 1;
+  void clear_url();
+  static const int kUrlFieldNumber = 1;
+  const ::std::string& url() const;
+  void set_url(const ::std::string& value);
+  #if LANG_CXX11
+  void set_url(::std::string&& value);
+  #endif
+  void set_url(const char* value);
+  void set_url(const char* value, size_t size);
+  ::std::string* mutable_url();
+  ::std::string* release_url();
+  void set_allocated_url(::std::string* url);
+
+  // @@protoc_insertion_point(class_scope:opencogservices.Ticket)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::ArenaStringPtr url_;
+  mutable ::google::protobuf::internal::CachedSize _cached_size_;
+  friend struct ::protobuf_opencog_2eproto::TableStruct;
+};
 // ===================================================================
 
 
@@ -367,63 +482,6 @@ class Command : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// CommandOutput
-
-// string s = 1;
-inline void CommandOutput::clear_s() {
-  s_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& CommandOutput::s() const {
-  // @@protoc_insertion_point(field_get:opencogservices.CommandOutput.s)
-  return s_.GetNoArena();
-}
-inline void CommandOutput::set_s(const ::std::string& value) {
-  
-  s_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:opencogservices.CommandOutput.s)
-}
-#if LANG_CXX11
-inline void CommandOutput::set_s(::std::string&& value) {
-  
-  s_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:opencogservices.CommandOutput.s)
-}
-#endif
-inline void CommandOutput::set_s(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  s_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:opencogservices.CommandOutput.s)
-}
-inline void CommandOutput::set_s(const char* value, size_t size) {
-  
-  s_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:opencogservices.CommandOutput.s)
-}
-inline ::std::string* CommandOutput::mutable_s() {
-  
-  // @@protoc_insertion_point(field_mutable:opencogservices.CommandOutput.s)
-  return s_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* CommandOutput::release_s() {
-  // @@protoc_insertion_point(field_release:opencogservices.CommandOutput.s)
-  
-  return s_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void CommandOutput::set_allocated_s(::std::string* s) {
-  if (s != NULL) {
-    
-  } else {
-    
-  }
-  s_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), s);
-  // @@protoc_insertion_point(field_set_allocated:opencogservices.CommandOutput.s)
-}
-
-// -------------------------------------------------------------------
-
 // Command
 
 // string cmd = 1;
@@ -744,9 +802,125 @@ inline void Command::set_allocated_arg5(::std::string* arg5) {
   // @@protoc_insertion_point(field_set_allocated:opencogservices.Command.arg5)
 }
 
+// -------------------------------------------------------------------
+
+// CommandOutput
+
+// string s = 1;
+inline void CommandOutput::clear_s() {
+  s_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& CommandOutput::s() const {
+  // @@protoc_insertion_point(field_get:opencogservices.CommandOutput.s)
+  return s_.GetNoArena();
+}
+inline void CommandOutput::set_s(const ::std::string& value) {
+  
+  s_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:opencogservices.CommandOutput.s)
+}
+#if LANG_CXX11
+inline void CommandOutput::set_s(::std::string&& value) {
+  
+  s_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:opencogservices.CommandOutput.s)
+}
+#endif
+inline void CommandOutput::set_s(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  s_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:opencogservices.CommandOutput.s)
+}
+inline void CommandOutput::set_s(const char* value, size_t size) {
+  
+  s_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:opencogservices.CommandOutput.s)
+}
+inline ::std::string* CommandOutput::mutable_s() {
+  
+  // @@protoc_insertion_point(field_mutable:opencogservices.CommandOutput.s)
+  return s_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* CommandOutput::release_s() {
+  // @@protoc_insertion_point(field_release:opencogservices.CommandOutput.s)
+  
+  return s_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void CommandOutput::set_allocated_s(::std::string* s) {
+  if (s != NULL) {
+    
+  } else {
+    
+  }
+  s_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), s);
+  // @@protoc_insertion_point(field_set_allocated:opencogservices.CommandOutput.s)
+}
+
+// -------------------------------------------------------------------
+
+// Ticket
+
+// string url = 1;
+inline void Ticket::clear_url() {
+  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& Ticket::url() const {
+  // @@protoc_insertion_point(field_get:opencogservices.Ticket.url)
+  return url_.GetNoArena();
+}
+inline void Ticket::set_url(const ::std::string& value) {
+  
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:opencogservices.Ticket.url)
+}
+#if LANG_CXX11
+inline void Ticket::set_url(::std::string&& value) {
+  
+  url_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:opencogservices.Ticket.url)
+}
+#endif
+inline void Ticket::set_url(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:opencogservices.Ticket.url)
+}
+inline void Ticket::set_url(const char* value, size_t size) {
+  
+  url_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:opencogservices.Ticket.url)
+}
+inline ::std::string* Ticket::mutable_url() {
+  
+  // @@protoc_insertion_point(field_mutable:opencogservices.Ticket.url)
+  return url_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* Ticket::release_url() {
+  // @@protoc_insertion_point(field_release:opencogservices.Ticket.url)
+  
+  return url_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void Ticket::set_allocated_url(::std::string* url) {
+  if (url != NULL) {
+    
+  } else {
+    
+  }
+  url_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), url);
+  // @@protoc_insertion_point(field_set_allocated:opencogservices.Ticket.url)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 

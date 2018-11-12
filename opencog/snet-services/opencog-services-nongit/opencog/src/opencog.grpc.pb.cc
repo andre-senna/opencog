@@ -17,6 +17,7 @@ namespace opencogservices {
 
 static const char* ServiceDefinition_method_names[] = {
   "/opencogservices.ServiceDefinition/execute",
+  "/opencogservices.ServiceDefinition/asynchronousTask",
 };
 
 std::unique_ptr< ServiceDefinition::Stub> ServiceDefinition::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
@@ -27,6 +28,7 @@ std::unique_ptr< ServiceDefinition::Stub> ServiceDefinition::NewStub(const std::
 
 ServiceDefinition::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_execute_(ServiceDefinition_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_asynchronousTask_(ServiceDefinition_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status ServiceDefinition::Stub::execute(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::opencogservices::CommandOutput* response) {
@@ -41,18 +43,42 @@ ServiceDefinition::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& 
   return ::grpc::internal::ClientAsyncResponseReaderFactory< ::opencogservices::CommandOutput>::Create(channel_.get(), cq, rpcmethod_execute_, context, request, false);
 }
 
+::grpc::Status ServiceDefinition::Stub::asynchronousTask(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::opencogservices::Ticket* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_asynchronousTask_, context, request, response);
+}
+
+::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>* ServiceDefinition::Stub::AsyncasynchronousTaskRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::opencogservices::Ticket>::Create(channel_.get(), cq, rpcmethod_asynchronousTask_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::opencogservices::Ticket>* ServiceDefinition::Stub::PrepareAsyncasynchronousTaskRaw(::grpc::ClientContext* context, const ::opencogservices::Command& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::opencogservices::Ticket>::Create(channel_.get(), cq, rpcmethod_asynchronousTask_, context, request, false);
+}
+
 ServiceDefinition::Service::Service() {
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       ServiceDefinition_method_names[0],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< ServiceDefinition::Service, ::opencogservices::Command, ::opencogservices::CommandOutput>(
           std::mem_fn(&ServiceDefinition::Service::execute), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      ServiceDefinition_method_names[1],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< ServiceDefinition::Service, ::opencogservices::Command, ::opencogservices::Ticket>(
+          std::mem_fn(&ServiceDefinition::Service::asynchronousTask), this)));
 }
 
 ServiceDefinition::Service::~Service() {
 }
 
 ::grpc::Status ServiceDefinition::Service::execute(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::CommandOutput* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status ServiceDefinition::Service::asynchronousTask(::grpc::ServerContext* context, const ::opencogservices::Command* request, ::opencogservices::Ticket* response) {
   (void) context;
   (void) request;
   (void) response;

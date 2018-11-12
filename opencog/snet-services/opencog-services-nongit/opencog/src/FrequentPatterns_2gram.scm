@@ -11,10 +11,10 @@
 )
 
 
-;Pattern: Frequency = 20
+;Pattern: Frequency = 12
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "soda drinker")
+  (ConceptNode "man")
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
@@ -22,7 +22,7 @@
 )
 
 
-;Pattern: Frequency = 10
+;Pattern: Frequency = 12
 (InheritanceLink
   (PatternVariableNode "$var_1")
   (ConceptNode "ugly")
@@ -62,7 +62,7 @@
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "woman")
+  (ConceptNode "man")
 )
 
 
@@ -73,14 +73,25 @@
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "man")
+  (ConceptNode "woman")
 )
 
 
-;Pattern: Frequency = 8
+;Pattern: Frequency = 9
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "man")
+  (ConceptNode "soda drinker")
+)
+(InheritanceLink
+  (PatternVariableNode "$var_1")
+  (PatternVariableNode "$var_2")
+)
+
+
+;Pattern: Frequency = 7
+(InheritanceLink
+  (PatternVariableNode "$var_1")
+  (ConceptNode "woman")
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
@@ -95,14 +106,14 @@
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "soda drinker")
+  (ConceptNode "ugly")
 )
 
 
 ;Pattern: Frequency = 5
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "soda drinker")
+  (ConceptNode "ugly")
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
@@ -128,29 +139,18 @@
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "ugly")
+  (ConceptNode "soda drinker")
 )
 
 
 ;Pattern: Frequency = 5
 (InheritanceLink
   (PatternVariableNode "$var_1")
-  (ConceptNode "ugly")
+  (ConceptNode "soda drinker")
 )
 (InheritanceLink
   (PatternVariableNode "$var_1")
   (ConceptNode "woman")
-)
-
-
-;Pattern: Frequency = 2
-(InheritanceLink
-  (PatternVariableNode "$var_1")
-  (ConceptNode "woman")
-)
-(InheritanceLink
-  (PatternVariableNode "$var_1")
-  (PatternVariableNode "$var_2")
 )
 
 
