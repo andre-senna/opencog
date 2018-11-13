@@ -19,8 +19,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOGSERVICES_ECHOTEST_H
-#define _OPENCOGSERVICES_ECHOTEST_H
+#ifndef _OPENCOGSERVICES_ECHO_H
+#define _OPENCOGSERVICES_ECHO_H
 
 #include "../OpencogSNETService.h"
 
@@ -30,15 +30,15 @@ namespace opencogservices
 /**
  *
  */
-class EchoTest : public OpencogSNETService
+class Echo : public OpencogSNETService
 {
 
 public:
 
     bool execute(std::string &output, const std::vector<std::string> &args);
 
-    EchoTest();
-    ~EchoTest();
+    Echo();
+    ~Echo();
 
 private:
 
@@ -46,4 +46,4 @@ private:
 
 }
 
-#endif // _OPENCOGSERVICES_ECHOTEST_H
+#endif // _OPENCOGSERVICES_ECHO_H

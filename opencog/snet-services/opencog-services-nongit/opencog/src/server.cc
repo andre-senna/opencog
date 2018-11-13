@@ -58,7 +58,7 @@ void exec_service(ServerContext* context, const Command* input, CommandOutput* o
             break;
         }
         if (opencogService->execute(out, args)) {
-            output->set_s(input->cmd() + ": " + out);
+            output->set_s("Error in " + input->cmd() + ": " + out);
         } else {
             output->set_s(out);
         }
@@ -95,7 +95,7 @@ static void threadJobManager(ServerContext* context, const Command* input, const
         }
     }
 
-    string s = "Service finished. Output:\n" + output.s() + "\n";
+    string s = "Service finished. Output:\n" + output.s();
     FILE *f = fopen(url.c_str(), "w");
     fputs(s.c_str(), f);
     fclose(f);
@@ -123,7 +123,6 @@ public:
     Status asynchronousTask(ServerContext* context, const Command* input, Ticket* ticket) override {
         string url = baseOutputURL + to_string(::getpid()) + to_string(nextTicketCount++);
         ticket->set_url(url);
-        printf("INPUT: %s %s\n", input->cmd().c_str(), input->arg1().c_str());
         thread t(threadJobManager, context, input, url);
         t.detach();
         sleep(1);

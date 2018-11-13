@@ -1,25 +1,26 @@
-#include "EchoTest.h"
+#include "Echo.h"
 
 using namespace opencogservices;
 using namespace std;
 
-EchoTest::EchoTest() 
+Echo::Echo() 
 {
 }
 
-EchoTest::~EchoTest() 
+Echo::~Echo() 
 {
 }
 
-bool EchoTest::execute(string &output, const vector<std::string> &args)
+bool Echo::execute(string &output, const vector<std::string> &args)
 {
-    string out = "echo: ";
+    string out;
     for (unsigned int i = 0; i < args.size(); i++) {
         out += args.at(i);
         if (i != (args.size() - 1)) {
             out += " ";
         }
     }
+    out += "\n";
 
     output.assign(out);
     return false;

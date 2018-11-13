@@ -71,10 +71,17 @@ bool OpencogSNETService::loadAtomeseFile(string &errorMessage, const std::string
     return (errorCode != 0);
 }
 
-void OpencogSNETService::evaluateScheme(const std::string &scmLine)
+void OpencogSNETService::evaluateScheme(const string &scmLine)
 {
     logger().info("evaluateScheme(): " + scmLine);
     logger().info(schemeEval->eval(scmLine));
+}
+
+void OpencogSNETService::evaluateScheme(string &output, const string &scmLine)
+{
+    logger().info("evaluateScheme(): " + scmLine);
+    output.assign(schemeEval->eval(scmLine));
+    logger().info(output);
 }
 
 void OpencogSNETService::setConfigurationParameters(const std::string jsonString)

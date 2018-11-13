@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 OpenCog Foundation
+ * Copyright (C) 2017 OpenCog Foundation
  *
  * Author: Andre Senna <https://github.com/andre-senna>
  *
@@ -19,10 +19,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef _OPENCOGSERVICES_OPENCOGSNETSERVICEFACTORY_H
-#define _OPENCOGSERVICES_OPENCOGSNETSERVICEFACTORY_H
+#ifndef _OPENCOGSERVICES_SCMSERVICE_H
+#define _OPENCOGSERVICES_SCMSERVICE_H
 
-#include <string>
 #include "OpencogSNETService.h"
 
 namespace opencogservices
@@ -31,15 +30,21 @@ namespace opencogservices
 /**
  *
  */
-class OpencogSNETServiceFactory 
+class SCMService : public OpencogSNETService
 {
 
 public:
 
-    static OpencogSNETService *factory(const std::string &serviceName);
-    static bool fileExists(const std::string& fname);
+    SCMService(const std::string &scmFileName);
+    ~SCMService();
+
+    bool execute(std::string &output, const std::vector<std::string> &args);
+
+private:
+
+    std::string schemeFileName;
 };
 
 }
 
-#endif // _OPENCOGSERVICES_OPENCOGSNETSERVICEFACTORY_H
+#endif // _OPENCOGSERVICES_SCMSERVICE_H

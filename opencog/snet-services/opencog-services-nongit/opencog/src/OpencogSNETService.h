@@ -77,6 +77,12 @@ public:
      */
     void evaluateScheme(const std::string &scmLine);
 
+    /*
+     * Uses `schemeEval` to evaluate the passed Scheme string and return the
+     * output of the execution.
+     */
+    void evaluateScheme(std::string &output, const std::string &scmLine);
+
     void setConfigurationParameters(const std::string jsonString);
 
     opencog::AtomSpace atomSpace;
