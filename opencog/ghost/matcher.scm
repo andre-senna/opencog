@@ -1,7 +1,86 @@
 ;; This is the GHOST action selector for finding and deciding
 ;; which action should be executed at a particular point in time.
 
-(define* (eval-and-select RULES #:optional (SKIP-STI #f))
+(define (not-within-refractory? RULE)
+"
+  Check if a rule is still within its refractory period or not.
+"
+  (or (null? (cog-value RULE ghost-time-last-executed))
+      (> (- (current-time)
+            (car (cog-value->list
+              (cog-value RULE ghost-time-last-executed))))
+         refractory-period)))
+
+(define (stimulate-next-rules RULE)
+"
+  Stimulate the next rule in the sequence and the rejoinders as well,
+  if applicable, and de-stimulate the selected rule.
+"
+  ; Keep a record of which rule got executed, just for rejoinders
+  (let ((next-reactive-rule (cog-value RULE ghost-next-reactive-rule))
+        (next-rejoinder (cog-value RULE ghost-next-rejoinder))
+        (av-alist (cog-av->alist (cog-av RULE))))
+    ; Stimulate the next rules in the sequence and lower the STI of
+    ; the current one
+    ; Rejoinders will have a bigger boost than reactive rules by default
+    (if (not (null? next-reactive-rule))
+      (for-each
+        (lambda (r) (cog-stimulate r (* default-stimulus reactive-rule-sti-boost)))
+        (cog-value->list next-reactive-rule)))
+    (if (not (null? next-rejoinder))
+      (for-each
+        (lambda (r) (cog-stimulate r (* default-stimulus rejoinder-sti-boost)))
+        (cog-value->list next-rejoinder)))
+    ; Lower the STI of the selected one
+    (cog-set-av!
+      RULE
+      (cog-new-av 0
+        (cdr (assoc 'lti av-alist)) (cdr (assoc 'vlti av-alist)))))
+)
+
+(define (handle-rule-features RULE)
+"
+  Handle each of the GHOST rule-features for the selected rule.
+"
+  (for-each
+    (lambda (k)
+      (define key-str (cog-name k))
+      (define val (cog-value RULE k))
+      (cond
+        ((string=? "unkeep" key-str)
+         ; 'val' here should be a LinkValue of rule labels
+         (for-each
+           (lambda (r)
+             (cog-set-tv! r (cog-new-stv 0 (cog-stv-confidence r))))
+           (append-map (lambda (x) (get-rules-from-label (cog-name x)))
+             (cog-value->list val))))
+        ((string=? "mark-executed" key-str)
+         ; 'val' here should be a LinkValue of rule labels
+         (for-each
+           (lambda (lb)
+             (Evaluation ghost-rule-executed (List lb))
+             (for-each
+               (lambda (r)
+                 (cog-set-value! r
+                   ghost-time-last-executed
+                     (FloatValue (current-time))))
+               (get-rules-from-label (cog-name lb))))
+            (cog-value->list val)))
+        ((string=? "last-executed" key-str)
+         (State ghost-last-executed val))))
+    (cog-keys RULE))
+)
+
+(define (process-ghost-rule RULE)
+"
+  A wrapper for doing GHOST specific things that are needed for
+  the selected rule.
+"
+  (handle-rule-features RULE)
+  (stimulate-next-rules RULE)
+)
+
+(define (eval-and-select RULES)
 "
   This is the goal-driven action selection.
 
@@ -18,12 +97,6 @@
   Sc = Satisfiability of the context of the psi-rule
   Icag = Importance (STI) of the rule
   Ug = Urge of the goal
-
-  SKIP-STI is for backward compatibility, used to decide whether to
-  include STI of a rule (Icag) in action selection or not. It's needed
-  as the default STI is zero. So if one runs GHOST without running
-  ECAN (as the earlier version of GHOST permits) then no action will
-  ever be triggered.
 "
   ; ----------
   ; Store the evaluation results for the contexts, so that the same context
@@ -62,11 +135,9 @@
       (if (> context-weight 0)
         (* context-weight
           (assoc-ref context-alist (psi-get-context R))) 1))
-    (define sti (if SKIP-STI
-      ; Weight higher if the rule is in the current topic
-      (if (is-rule-in-topic? R (ghost-get-curr-topic)) 1 0.5)
+    (define sti
       (if (> sti-weight 0)
-        (* sti-weight (cog-av-sti R)) 1)))
+        (* sti-weight (cog-av-sti R)) 1))
     (define urge
       (if (> urge-weight 0)
         (* urge-weight (psi-urge (psi-get-goal R))) 1))
@@ -82,23 +153,18 @@
 
   ; Check if a rule should be skipped or not, based on
   ; its current STI, strength, and the last executed time
-  (define (skip-rule? r)
-    (or SKIP-STI
-        (and (or (= sti-weight 0) (> (cog-av-sti r) 0))
-             (or (= strength-weight 0) (> (cog-stv-strength r) 0))
-             (or (null? (cog-value r ghost-time-last-executed))
-                 (> (- (current-time)
-                       (car (cog-value->list
-                         (cog-value r ghost-time-last-executed))))
-                    refractory-period)))))
+  (define (accept-rule? r)
+    (and (or (= sti-weight 0) (> (cog-av-sti r) 0))
+         (or (= strength-weight 0) (> (cog-stv-strength r) 0))
+         (not-within-refractory? r)))
 
   ; ----------
   (for-each
     (lambda (r)
       ; Skip the rule if its STI or strength is zero,
-      ; unless we choose to ignore their weights,
-      ; or if it's still with the refractory period
-      (if (skip-rule? r)
+      ; or if it's still with the refractory period,
+      ; unless we choose to ignore their weights
+      (if (accept-rule? r)
         (let ((rc (psi-get-context r))
               (ra (psi-get-action r)))
           ; Though an action may be in multiple psi-rule, but it doesn't
@@ -177,7 +243,7 @@
               (list)
               (map (lambda (a) (assoc-ref action-rule-alist (car a))) action-weight-alist))))
       (if (null? rejoinder)
-        ; If there is no rejoinder that safisfy the current context, try the responders
+        ; If there is no rejoinder that safisfy the current context, try the reactive rules
         (begin
           (if specificity-based-action-selection
             ; Specificity-based action selection (experimental)
@@ -214,51 +280,7 @@
         rejoinder))))
 
 ; ----------
-(define-public (ghost-find-rules SENT)
-"
-  The action selector. It first searches for the rules using DualLink,
-  and then does the filtering by evaluating the context of the rules.
-  Eventually returns a list of weighted rules that can satisfy the demand.
-"
-  (let* ((input-lseq (gddr (car (filter (lambda (e)
-           (equal? ghost-lemma-seq (gar e)))
-             (cog-get-pred SENT 'PredicateNode)))))
-         ; The ones that contains no variables/globs
-         (exact-match (filter psi-rule? (cog-get-trunk input-lseq)))
-         ; The ones that contains no constant terms
-         (no-const (filter psi-rule? (append-map cog-get-trunk
-           (map gar (cog-incoming-by-type ghost-no-constant 'MemberLink)))))
-         ; The ones found by the recognizer
-         (dual-match (filter psi-rule? (append-map cog-get-trunk
-           (cog-outgoing-set (cog-execute! (Dual input-lseq))))))
-         ; Get the psi-rules associate with them with duplicates removed
-         (rules-candidates
-           (fold (lambda (rule prev)
-             ; Since a psi-rule can satisfy multiple goals and an
-             ; ImplicationLink will be generated for each of them,
-             ; we are comparing the implicant of the rules instead
-             ; of the rules themselves, and create a list of rules
-             ; with unique implicants
-             (if (any (lambda (r) (equal? (gar r) (gar rule))) prev)
-                 prev (append prev (list rule))))
-           (list) (append exact-match no-const dual-match)))
-         ; Evaluate the matched rules one by one and see which of them satisfy
-         ; the current context
-         ; One of them, if any, will be selected and executed
-         (selected (eval-and-select (delete-duplicates
-           (append exact-match no-const dual-match)) #t)))
-
-        (cog-logger-debug ghost-logger "For input:\n~a" input-lseq)
-        (cog-logger-debug ghost-logger "Rules with no constant:\n~a" no-const)
-        (cog-logger-debug ghost-logger "Exact match:\n~a" exact-match)
-        (cog-logger-debug ghost-logger "Dual match:\n~a" dual-match)
-        (cog-logger-debug ghost-logger "To-be-evaluated:\n~a" rules-candidates)
-        (cog-logger-debug ghost-logger "Selected:\n~a" selected)
-
-        (List selected)))
-
-; ----------
-(define-public (ghost-get-rules-from-af)
+(define-public (ghost-find-rules)
 "
   The action selector that works with ECAN.
   It evaluates and selects psi-rules from the attentional focus.
@@ -276,6 +298,18 @@
 
   (process-ghost-buffer)
 
+  ; First of all, run the "limbic system" -- a subset of rules that
+  ; will always be evaluated, and if appropriate, triggered immediately
+  (for-each
+    (lambda (p-rule)
+      (if (and (not-within-refractory? p-rule)
+               (> (cog-tv-mean (psi-satisfiable? p-rule)) 0)
+               (> (cog-stv-strength p-rule) 0))
+        (begin
+          (psi-imply p-rule)
+          (handle-rule-features p-rule))))
+    (filter psi-rule? (cog-incoming-set (ConceptNode "Parallel-Rules"))))
+
   (let* ((candidate-rules
            (if ghost-af-only?
              (filter is-psi-rule? (cog-af))
@@ -287,27 +321,8 @@
     (cog-logger-debug ghost-logger "Candidate Rules:\n~a" candidate-rules)
     (cog-logger-debug ghost-logger "Selected:\n~a" rule-selected)
 
-    ; Keep a record of which rule got executed, just for rejoinders
-    (if (not (null? rule-selected))
-      (let ((next-responder (cog-value rule-selected ghost-next-responder))
-            (next-rejoinder (cog-value rule-selected ghost-next-rejoinder))
-            (av-alist (cog-av->alist (cog-av rule-selected))))
-        ; Stimulate the next rules in the sequence and lower the STI of
-        ; the current one
-        ; Rejoinders will have a bigger boost than responders by default
-        (if (not (null? next-responder))
-          (for-each
-            (lambda (r) (cog-stimulate r (* default-stimulus responder-sti-boost)))
-            (cog-value->list next-responder)))
-        (if (not (null? next-rejoinder))
-          (for-each
-            (lambda (r) (cog-stimulate r (* default-stimulus rejoinder-sti-boost)))
-            (cog-value->list next-rejoinder)))
-        ; Lower the STI of the selected one
-        (cog-set-av!
-          rule-selected
-          (cog-new-av 0
-            (cdr (assoc 'lti av-alist)) (cdr (assoc 'vlti av-alist))))))
+    ; Do some GHOST specific processing if a satisfiable GHOST rule is found
+    (if (not (null? rule-selected)) (process-ghost-rule rule-selected))
 
     (List rule-selected)))
 
@@ -315,4 +330,4 @@
 ; The action selector for OpenPsi
 (psi-set-action-selector!
   ghost-component
-  (ExecutionOutput (GroundedSchema "scm: ghost-get-rules-from-af") (List)))
+  (ExecutionOutput (GroundedSchema "scm: ghost-find-rules") (List)))
